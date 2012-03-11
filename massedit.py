@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-__version__ = '$Revision$'
-
-"""Implements a python stream editor class to process lines or files. 
+"""Implements a python stream editor class to process lines or files.
 
 I have been using runsed and checksed (from Unix Power Tools) for years and
-did not find a good substitute under Windows until I came accross Graham 
+did not find a good substitute under Windows until I came accross Graham
 Fawcett python recipe on :
-http://code.activestate.com/recipes/437932-pyline-a-grep-like-sed-like-command-line-tool/
+http://code.activestate.com/recipes/\
+        437932-pyline-a-grep-like-sed-like-command-line-tool/
 
 The core was fleshed up a little, and here we are. If you find it usefull and
-enhance it please, do not forget to submit patches. Thanks! 
+enhance it please, do not forget to submit patches. Thanks!
 """
+
+__version__ = '$Revision$'
 
 import logging
 import argparse
@@ -26,9 +27,9 @@ class EditorError(RuntimeError):
 
 class Editor(object):
     """Processes input file or input line.
-    
+
     Named arguments:
-    code -- code expression to process the input with. 
+    code -- code expression to process the input with.
     """
 
     def __init__(self, **kwds):
@@ -45,10 +46,10 @@ class Editor(object):
             try:
                 result = eval(self.code_obj, globals(), locals())
             except TypeError as ex:
-                raise EditorError("failed to execute %s: %s" % (self.code, ex)) 
+                raise EditorError("failed to execute %s: %s" % (self.code, ex))
             if result is None or result is False:
                 raise EditorError(
-                        "cannot process line '%s' with %s" % 
+                        "cannot process line '%s' with %s" %
                         (line, self.code))
             elif isinstance(result, list) or isinstance(result, tuple):
                 line = ' '.join(map(str, result))
@@ -65,8 +66,8 @@ class Editor(object):
         """
         diffs = []
         from_lines = open(file_name).readlines()
-        to_lines = [ self.edit_line(line) for line in from_lines ]
-        diffs = difflib.unified_diff(from_lines, to_lines, 
+        to_lines = [self.edit_line(line) for line in from_lines]
+        diffs = difflib.unified_diff(from_lines, to_lines,
                     fromfile=file_name, tofile='<new>')
         return list(diffs)
 
@@ -78,7 +79,7 @@ class Editor(object):
 
     def set_module(self, module):
         """Imports module that are needed for the code expr to compile.
-       
+
         Argument:
         module -- can be scalar string or a list of strings.
         """
@@ -88,21 +89,22 @@ class Editor(object):
             all_modules = [module]
         for mod in all_modules:
             globals()[mod] = __import__(mod.strip())
-            
+
 
 def get_verbosity(verbose_count):
     """Helper to convert a count of verbosity level to a logging level."""
-    if verbose_count < 0:  verbose_count = 0   # pylint: disable=C0321
-    if verbose_count > 4:  verbose_count = 4   # pylint: disable=C0321
-    levels = [ logging.FATAL, logging.ERROR, logging.WARNING, 
-            logging.INFO, logging.DEBUG ]
+    if verbose_count < 0:
+        verbose_count = 0
+    if verbose_count > 4:
+        verbose_count = 4
+    levels = [logging.FATAL, logging.ERROR, logging.WARNING,
+            logging.INFO, logging.DEBUG]
     return levels[verbose_count]
 
 
 def main(args):
     """Main command line handler."""
-    parser = argparse.ArgumentParser(description=
-            "Regex-based file editor")
+    parser = argparse.ArgumentParser(description="Regex-based file editor")
     parser.add_argument("-i", "--in-place", dest="inplace",
             action="store_true", default=False,
             help="in-place substitution")
@@ -113,22 +115,19 @@ def main(args):
             action="count", defaule="0", help="Increases verbosity")
     args = parser.parse_args()
     verbosity = get_verbosity(args.verbose_count)
-    logging.getLogger().setLevel( verbosity )
+    logging.getLogger().setLevel(verbosity)
     for infile in args:
-        with open( infile, "r" ) as source:
-            #process_file( source, args )
-            pass
+        editor.process_file(infile)
     return 1
 
 
 if __name__ == "__main__":
     import sys
-    logging.basicConfig( stream=sys.stderr )
+    logging.basicConfig(stream=sys.stderr)
     os_status = 1
     try:
         main(sys.argv)
         os_status = 0
     finally:
         logging.shutdown()
-    sys.exit( os_status )
-
+    sys.exit(os_status)
