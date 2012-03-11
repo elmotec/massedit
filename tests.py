@@ -2,16 +2,14 @@
 
 """Test module to test massedit."""
 
+import os
+import sys
 import unittest
+
 import massedit
 
 
-def get_current_file_name():
-    import inspect
-    current_path = inspect.getfile(inspect.currentframe()) 
-    return current_path
-
-class TestSed(unittest.TestCase):  # pylint: disable=R0904
+class TestEditor(unittest.TestCase):  # pylint: disable=R0904
     """Tests the massedit module."""
     def test_no_change(self):
         """Tests the editor does nothing when not told to do anything."""
@@ -40,18 +38,16 @@ class TestSed(unittest.TestCase):  # pylint: disable=R0904
         editor = massedit.Editor()
         editor.set_code_expr("re.sub('def test', 'def toast')")
         with self.assertRaises(massedit.EditorError):
-            new_line = editor.edit_line('some line')
+            editor.edit_line('some line')
 
     def remove_module(self, module_name):
         """Removes the module from memory."""
-        import sys
         if module_name in sys.modules:
             del(sys.modules[module_name])
 
     @unittest.skip("FIXME. Will revisit this one.")
     def test_missing_module(self):
         """Checks that missing module generates an exception."""
-        import sys
         self.remove_module('random')
         self.assertNotIn('random', sys.modules)
         editor = massedit.Editor()
@@ -67,29 +63,61 @@ class TestSed(unittest.TestCase):  # pylint: disable=R0904
         editor.set_module('random')
         editor.set_code_expr('random.randint(0,9)')
         random_number = editor.edit_line('to be replaced')
-        self.assertIn(random_number, [ str(x) for x in range(10) ])
+        self.assertIn(random_number, [str(x) for x in range(10)])
+
+
+class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
+    """Tests the command line interface of massedit.py."""
+    def setUp(self):
+        """Creates a temporary file to work with."""
+        self.file = open("test_file.txt", "w")
+        self.file.write("""The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren't special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.
+Now is better than never.
+Although never is often better than *right* now.
+If the implementation is hard to explain, it's a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea -- let's do more of those!
+""")
+        self.file.close()
+
+    def tearDown(self):
+        """Removes the temporary file."""
+        os.unlink(self.file.name)
+
+    def test_setup(self):
+        """Checks that we have a temporary file to work with."""
+        self.assertTrue(os.path.exists(self.file.name))
 
     def test_replace_in_file(self):
         """Checks editing of an entire file."""
-        current_file_name = get_current_file_name()
-        # This should get replaced when we self-process (1)
         editor = massedit.Editor()
-        # This should get replaced when we self-process (2)
-        editor.set_code_expr(
-                "re.sub('self-process', 'process ourselves', line)") #  (3)
-        diffs = editor.edit_file(
-                current_file_name, dry_run=True)
-        self.assertEquals(len(diffs), 24)
+        editor.set_code_expr("re.sub('Dutch', 'Guido', line)")
+        diffs = editor.edit_file(self.file.name, dry_run=True)
+        self.assertEquals(len(diffs), 11)
         expected_first_diff = """\
-         current_file_name = get_current_file_name()
--        # This should get replaced when we self-process (1)
-+        # This should get replaced when we process ourselves (1)
-         editor = massedit.Editor()
+ There should be one-- and preferably only one --obvious way to do it.
+-Although that way may not be obvious at first unless you're Dutch.
++Although that way may not be obvious at first unless you're Guido.
+ Now is better than never.
 """
-        self.assertEquals("".join(diffs[5:9]),expected_first_diff)
+        self.assertEquals("".join(diffs[5:9]), expected_first_diff)
 
 
 if __name__ == "__main__":
-    import sys
     os_status = unittest.main(argv=sys.argv)
     sys.exit(os_status)
