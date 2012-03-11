@@ -9,25 +9,28 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "pysed",
+    name = "massedit",
     version = "0.0",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
     description = ("."),
     license = "BSD",
     keywords = "sed editor stream python edit",
-    url = "http://packages.python.org/pysed",
-    packages=['tests'],
+    url = "http://packages.python.org/massedit",
+    packages=[],
     long_description=read('README.rst'),
     test_suite='tests',
-    setup_requires=[
-        ],
-    tests_require=[
-        ],
+    setup_requires=[],
+    tests_require=[],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 2.7",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: Python Software Foundation License",
+        "Topic :: Software Development",
+        "Topic :: Text Editors :: Text Processing",
+        "Topic :: Utilites",
+        "Natural Language :: English",
+        "Intended Audience :: Developers",
     ],
 )
 
