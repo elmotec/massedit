@@ -9,7 +9,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "massedit",
+    name = "Python Mass Editor",
     version = "0.1",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
