@@ -10,11 +10,11 @@ def read(fname):
 
 setup(
     name = "massedit",
-    version = "0.0",
+    version = "0.1",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
     description = ("."),
-    license = "BSD",
+    license = "MIT",
     keywords = "sed editor stream python edit",
     url = "http://packages.python.org/massedit",
     packages=[],
@@ -24,12 +24,12 @@ setup(
     tests_require=[],
     classifiers=[
         "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
         "Programming Language :: Python :: 2.7",
-        "License :: OSI Approved :: Python Software Foundation License",
         "Topic :: Software Development",
         "Topic :: Text Editors :: Text Processing",
         "Topic :: Utilites",
-        "Natural Language :: English",
         "Intended Audience :: Developers",
     ],
 )
