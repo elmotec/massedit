@@ -64,7 +64,16 @@ better alternative. This is certainly a more mature tool.
 The core was fleshed up a little, and here we are. If you find it useful and
 enhance it please, do not forget to submit patches. Thanks!
 
+
+License
+-------
+
+Licensed under the term of `MIT License`_. See file LICENSE.
+
+
+
 .. _437932: http://code.activestate.com/recipes/437932-pyline-a-grep-like-sed-like-command-line-tool/
 .. _Python re module: http://docs.python.org/library/re.html
 .. _Pyp: http://code.google.com/p/pyp/
+.. _MIT License: http://en.wikipedia.org/wiki/MIT_License
 
