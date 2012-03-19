@@ -14,7 +14,7 @@ enhance it please, do not forget to submit patches. Thanks!
 Licensed under the term of MIT License. See file LICENSE.
 """
 
-__version__ = '$Revision$'
+__version__ = '0.1'
 
 import os
 import logging
