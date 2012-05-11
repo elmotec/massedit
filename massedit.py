@@ -168,12 +168,14 @@ def command_line(argv):
                 format(os.path.basename(argv[0]))
     parser = argparse.ArgumentParser(
             description="Python based mass file editor",
+            version=__version__,
             epilog=example)
     parser.add_argument("-w", "--write", dest="write",
             action="store_true", default=False,
             help="modify target file(s) in place")
-    parser.add_argument("-v", "--verbose", dest="verbose_count",
-            action="count", default=0, help="Increases verbosity")
+    parser.add_argument("-V", "--verbose", dest="verbose_count",
+            action="count", default=0,
+            help="increases log verbosity (can be specified multiple times)")
     parser.add_argument('-e', "--expression", dest="expressions", nargs=1,
             help="Python expressions to be applied on all files. Use the line "
             "variable to reference the current line.")
