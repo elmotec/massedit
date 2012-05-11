@@ -13,27 +13,26 @@ You probably will need to know the basics of the `Python re module`_ (regular ex
 
 ::
 
- usage: massedit.py [-h] [-c] [-v] [-V] [-e EXPRESSION] file [file ...]
+  usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] file [file ...]
 
- Python based mass file editor
-
- positional arguments:
-   file                  file to process with the expression. Modified in
-                         place.
-
- optional arguments:
-   -h, --help            show this help message and exit
-   -w, --write           modify the target files in place
-   -v, --version         shows version number
-   -V, --verbose         Increases verbosity
-   -e EXPRESSIONS, --expression EXPRESSIONS
-                         Python expression to be applied on all files. Use the
-                         line variable to reference the current line.
+  Python based mass file editor
   
-Where *expression* is to be applied to a variable arbitrarily call ``line``. For instance, 
-``re.sub('assertEquals', 'assertEqual', line)`` will replace all instances of assertEquals 
-with assertEqual.
-
+  positional arguments:
+    file                  file to process with the expression. Modified in
+                          place.
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -v, --version         show program's version number and exit
+    -w, --write           modify target file(s) in place
+    -V, --verbose         increases log verbosity (can be specified multiple
+                          times)
+    -e EXPRESSIONS, --expression EXPRESSIONS
+                          Python expressions to be applied on all files. Use the
+                          line variable to reference the current line.
+  
+  example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" test*.py
+  
 ::
 
   massedit.py -e "re.sub('assertEquals', 'assertEqual', line)" test_pre_python_33.py

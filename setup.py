@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "Python Mass Editor",
-    version = "0.1",
+    version = "0.50",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
     description = ("."),
@@ -29,7 +29,7 @@ setup(
         "Programming Language :: Python :: 2.7",
         "Topic :: Software Development",
         "Topic :: Text Editors :: Text Processing",
-        "Topic :: Utilites",
+        "Topic :: Utilities",
         "Intended Audience :: Developers",
     ],
 )
