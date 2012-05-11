@@ -1,0 +1,1 @@
+python massedit.py %*
