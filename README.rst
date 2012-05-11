@@ -3,13 +3,13 @@ Python Mass Editor
 ==================
 
 Implements a python mass editor class to process multiple files using Python
-code. The modification(s) take(s) are shown on stdout as a diff output. One
-can also modify the target files in place with the -w/--write option.
+code. The modification(s) is (are) shown on stdout as a diff output. One
+can then modify the target file(s) in place with the -w/--write option.
 
 Usage
 -----
 
-You will probably need to know the basics of the `Python re module`_ (regular expressions). The usage is:
+You probably will need to know the basics of the `Python re module`_ (regular expressions).
 
 ::
 
@@ -24,20 +24,34 @@ You will probably need to know the basics of the `Python re module`_ (regular ex
  optional arguments:
    -h, --help            show this help message and exit
    -w, --write           modify the target files in place
-   -v, --verbose         Increases verbosity
+   -v, --version         shows version number
+   -V, --verbose         Increases verbosity
    -e EXPRESSIONS, --expression EXPRESSIONS
                          Python expression to be applied on all files. Use the
                          line variable to reference the current line.
   
-Where *expression* is to be applied to a variable arbitrarily call line. For instance, re.sub('Duck', 'Donkey', line) will replace all instances of Duck with Donkey.
+Where *expression* is to be applied to a variable arbitrarily call ``line``. For instance, 
+``re.sub('assertEquals', 'assertEqual', line)`` will replace all instances of assertEquals 
+with assertEqual.
 
 ::
 
- massedit.py -e "re.sub('Duck', 'Donkey', line)" file_to_modify.txt
+ massedit.py -e "re.sub('assertEquals', 'assertEqual', line)" file_to_modify.txt
 
 
-Plan
-----
+Installation
+------------
+
+Download massedit.py from http://github.com/elmotec/massedit or:
+
+::
+  
+  pip install massedit
+
+
+
+Plans
+-----
 
 I intend to add support for a file of expressions as an argument to allow
 multiple modification at once.
@@ -46,6 +60,7 @@ multiple modification at once.
 I also would like to find a satisfactory way (ie. easy to use) to handle
 multiline regex as the current version works on a line by line basis.
 
+Add magic variables ``lineno`` and ``filename`` in addition to ``line``.
 
 History
 -------
@@ -55,14 +70,11 @@ did not find a good substitute under Windows until I came across Graham
 Fawcett python recipe 437932_ on ActiveState. It inspired me to write the 
 Python Mass Editor.
 
-
-If you are more interested in awk-like tool, you probably will find pyp_ a
-better alternative. This is certainly a more mature tool.
-
-
 The core was fleshed up a little, and here we are. If you find it useful and
 enhance it please, do not forget to submit patches. Thanks!
 
+If you are more interested in awk-like tool, you probably will find pyp_ a
+better alternative. This is certainly a more mature tool.
 
 License
 -------
