@@ -3,9 +3,8 @@ Python Mass Editor
 ==================
 
 Implements a python mass editor class to process multiple files using Python
-code. The modification(s) take(s) place in place, though a --check option 
-allows one to see a diff between the original file and the modified file (as
-it would look without the --check option) before hand.
+code. The modification(s) take(s) are shown on stdout as a diff output. One
+can also modify the target files in place with the -w/--write option.
 
 Usage
 -----
@@ -16,7 +15,7 @@ You will probably need to know the basics of the `Python re module`_ (regular ex
 
  usage: massedit.py [-h] [-c] [-v] [-e EXPRESSION] file [file ...]
 
- Python based file editor
+ Python based mass file editor
 
  positional arguments:
    file                  file to process with the expression. Modified in
@@ -24,9 +23,9 @@ You will probably need to know the basics of the `Python re module`_ (regular ex
 
  optional arguments:
    -h, --help            show this help message and exit
-   -c, --check           only show edit that are to take place
+   -w, --write           modify the target files in place
    -v, --verbose         Increases verbosity
-   -e EXPRESSION, --expression EXPRESSION
+   -e EXPRESSIONS, --expression EXPRESSIONS
                          Python expression to be applied on all files. Use the
                          line variable to reference the current line.
   

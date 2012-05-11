@@ -166,11 +166,12 @@ def command_line(argv):
     example = """
         example: {} -e "re.sub('failIf', 'assertFalse', line)" test*.py""".\
                 format(os.path.basename(argv[0]))
-    parser = argparse.ArgumentParser(description="Python based file editor",
+    parser = argparse.ArgumentParser(
+            description="Python based mass file editor",
             epilog=example)
     parser.add_argument("-w", "--write", dest="write",
             action="store_true", default=False,
-            help="write resulting file in place")
+            help="modify target file(s) in place")
     parser.add_argument("-v", "--verbose", dest="verbose_count",
             action="count", default=0, help="Increases verbosity")
     parser.add_argument('-e', "--expression", dest="expressions", nargs=1,
