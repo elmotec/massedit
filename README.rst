@@ -13,7 +13,7 @@ You probably will need to know the basics of the `Python re module`_ (regular ex
 
 ::
 
- usage: massedit.py [-h] [-c] [-v] [-e EXPRESSION] file [file ...]
+ usage: massedit.py [-h] [-c] [-v] [-V] [-e EXPRESSION] file [file ...]
 
  Python based mass file editor
 
@@ -36,31 +36,44 @@ with assertEqual.
 
 ::
 
- massedit.py -e "re.sub('assertEquals', 'assertEqual', line)" file_to_modify.txt
+  massedit.py -e "re.sub('assertEquals', 'assertEqual', line)" test_pre_python_33.py
+
+::
+
+or if massedit is installed as a package (from pypi for instance) :
+
+::
+
+  python -mmassedit -e "re.sub('assertEquals', 'assertEqual', line)" test_pre_python_33.py
+
 
 
 Installation
 ------------
 
-Download massedit.py from http://github.com/elmotec/massedit or:
+Download massedit.py from http://github.com/elmotec/massedit or :
 
 ::
   
   pip install massedit
 
 
-
 Plans
 -----
 
-I intend to add support for a file of expressions as an argument to allow
-multiple modification at once.
+- Add support for 3rd party tool (e.g. `autopep8`_) to process the files.
+- Add support for a file of expressions as an argument to allow multiple modification at once.
+- Find a satisfactory way (ie. easy to use) to handle multiline regex as the current version works on a line by line basis.
+- Add magic variables ``lineno`` and ``filename`` in addition to ``line``.
 
 
-I also would like to find a satisfactory way (ie. easy to use) to handle
-multiline regex as the current version works on a line by line basis.
+Rationale
+---------
 
-Add magic variables ``lineno`` and ``filename`` in addition to ``line``.
+- I have a hard time practicing more than a few dialects of regular expressions. 
+- I need something portable to Windows without being bothered by eol. 
+- I believe Python is the ideal tool to build something more powerful than simple regex based substitutions.
+
 
 History
 -------
@@ -76,6 +89,7 @@ enhance it please, do not forget to submit patches. Thanks!
 If you are more interested in awk-like tool, you probably will find pyp_ a
 better alternative. This is certainly a more mature tool.
 
+
 License
 -------
 
@@ -87,4 +101,4 @@ Licensed under the term of `MIT License`_. See file LICENSE.
 .. _Python re module: http://docs.python.org/library/re.html
 .. _Pyp: http://code.google.com/p/pyp/
 .. _MIT License: http://en.wikipedia.org/wiki/MIT_License
-
+.. _autopep8: http://pypi.python.org/pypi/autopep8
