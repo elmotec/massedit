@@ -11,10 +11,17 @@ import mock
 import massedit
 
 
+def remove_module(module_name):
+    """Removes the module from memory."""
+    if module_name in sys.modules:
+        del(sys.modules[module_name])
+
+
 class TestEditor(unittest.TestCase):  # pylint: disable=R0904
     """Tests the massedit module."""
 
     def test_logger_error(self):
+        """Tests logging from logger works at least for errors."""
         mock_handler = mock.Mock()
         mock_handler.level = logging.ERROR
         massedit.logger.addHandler(mock_handler)
@@ -42,7 +49,7 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         editor = massedit.Editor()
         with self.assertRaises(SyntaxError):
             editor.append_code_expr("invalid expression")
-            self.assertIsNone(self.code_obj)
+            self.assertIsNone(editor.code_objs)
 
     def test_invalid_code_expr2(self):
         """Checks we get a SyntaxError if the code is missing an argument."""
@@ -51,25 +58,20 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         with self.assertRaises(massedit.EditorError):
             editor.edit_line('some line')
 
-    def remove_module(self, module_name):
-        """Removes the module from memory."""
-        if module_name in sys.modules:
-            del(sys.modules[module_name])
-
     @unittest.skip("FIXME. Will revisit this one.")
     def test_missing_module(self):
         """Checks that missing module generates an exception."""
-        self.remove_module('random')
+        remove_module('random')
         self.assertNotIn('random', sys.modules)
         editor = massedit.Editor()
         #random.randint(0,10)  # Fails as it should.
-        editor.append_code_expr('random.randint(0,10)')  # This seems to work ?!
+        editor.append_code_expr('random.randint(0,10)')  # works ?!
         with self.assertRaises(NameError):
             editor.append_code_expr("random.randint(0,10)")  # Houston...
 
     def test_module_import(self):
         """Checks the module import functinality."""
-        self.remove_module('random')
+        remove_module('random')
         editor = massedit.Editor()
         editor.import_module('random')
         editor.append_code_expr('random.randint(0,9)')
@@ -140,7 +142,7 @@ Namespaces are one honking great idea -- let's do more of those!
             n_lines = len(new_lines)
             for line in xrange(n_lines):
                 if line != 16:
-                    self.assertEquals(new_lines[line - 1], 
+                    self.assertEquals(new_lines[line - 1],
                             original_lines[line - 1])
                 else:
                     expected_line_16 = \
@@ -149,11 +151,10 @@ Namespaces are one honking great idea -- let's do more of those!
                     self.assertEquals(new_lines[line - 1], expected_line_16)
         self.assertFalse(mock_stdout.write.called)
 
-
     def test_command_line_check(self):
         """Checks simple replacement via command line."""
         with mock.patch('sys.stdout') as mock_stdout:
-            massedit.command_line(["-e","re.sub('Dutch', 'Guido', line)",
+            massedit.command_line(["-e", "re.sub('Dutch', 'Guido', line)",
                 self.file.name])
             new_lines = open(self.file.name, "r").readlines()
             original_lines = self.text.splitlines(True)

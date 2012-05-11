@@ -112,11 +112,12 @@ class Editor(object):
         logger.debug("compiled code {}".format(code))
 
     def set_code_expr(self, codes):
+        """Convenience: sets all the code expressions at once."""
         self.code_objs = []
         self._codes = []
         for code in codes:
             self.append_code_expr(code)
-    
+
     def import_module(self, module):  # pylint: disable=R0201
         """Imports module that are needed for the code expr to compile.
 
