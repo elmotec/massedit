@@ -32,12 +32,6 @@ You probably will need to know the basics of the `Python re module`_ (regular ex
   
   example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" test*.py
   
-::
-
-  massedit.py -e "re.sub('assertEquals', 'assertEqual', line)" test_pre_python_33.py
-
-::
-
 or if massedit is installed as a package (from pypi for instance) :
 
 ::
