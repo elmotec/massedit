@@ -6,14 +6,14 @@ from setuptools import setup
 # README file and 2) it's easier to type in the README file than to put a raw
 # string in below ...
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), 'r').read()
 
 setup(
     name = "Python Mass Editor",
     version = "0.50",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
-    description = ("."),
+    description = 'Massively edit multiple files using Python text processing modules',
     license = "MIT",
     keywords = "sed editor stream python edit",
     url = "http://github.com/elmotec/massedit",
