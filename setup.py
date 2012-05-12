@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "Python Mass Editor",
-    version = "0.50",
+    version = "0.51",
     author = "Jerome Lecomte",
     author_email = "jlecomte1972@yahoo.com",
     description = 'Massively edit multiple files using Python text processing modules',

@@ -7,7 +7,7 @@ See README.rst for more information.
 Licensed under the term of MIT License. See file LICENSE.
 """
 
-__version__ = '0.50'  # Update setup.py when changing version.
+__version__ = '0.51'  # Update setup.py when changing version.
 
 
 import os
