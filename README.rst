@@ -36,7 +36,7 @@ or if massedit is installed as a package (from pypi for instance) :
 
 ::
 
-  python -mmassedit -e "re.sub('assertEquals', 'assertEqual', line)" test_pre_python_33.py
+  python -mmassedit -e "re.sub('assertEquals', 'assertEqual', line)" test.py
 
 
 
