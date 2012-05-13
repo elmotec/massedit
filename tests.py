@@ -33,7 +33,7 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         editor = massedit.Editor()
         input_line = "some info"
         output_line = editor.edit_line(input_line)
-        self.assertEquals(output_line, input_line)
+        self.assertEqual(output_line, input_line)
 
     def test_simple_replace(self):
         """Simple replacement check."""
@@ -41,8 +41,8 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         original_line = 'What a nice cat!'
         editor.append_code_expr("re.sub('cat','horse',line)")
         new_line = editor.edit_line(original_line)
-        self.assertEquals(new_line, 'What a nice horse!')
-        self.assertEquals(original_line, 'What a nice cat!')
+        self.assertEqual(new_line, 'What a nice horse!')
+        self.assertEqual(original_line, 'What a nice cat!')
 
     def test_syntax_error(self):
         """Checks we get a SyntaxError if the code is not valid."""
@@ -122,14 +122,14 @@ Namespaces are one honking great idea -- let's do more of those!
         editor = massedit.Editor()
         editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
         diffs = editor.edit_file(self.file.name)
-        self.assertEquals(len(diffs), 11)
+        self.assertEqual(len(diffs), 11)
         expected_first_diff = """\
  There should be one-- and preferably only one --obvious way to do it.
 -Although that way may not be obvious at first unless you're Dutch.
 +Although that way may not be obvious at first unless you're Guido.
  Now is better than never.
 """
-        self.assertEquals("".join(diffs[5:9]), expected_first_diff)
+        self.assertEqual("".join(diffs[5:9]), expected_first_diff)
 
     def test_command_line_replace(self):
         """Checks simple replacement via command line."""
@@ -142,13 +142,13 @@ Namespaces are one honking great idea -- let's do more of those!
             n_lines = len(new_lines)
             for line in xrange(n_lines):
                 if line != 16:
-                    self.assertEquals(new_lines[line - 1],
+                    self.assertEqual(new_lines[line - 1],
                             original_lines[line - 1])
                 else:
                     expected_line_16 = \
                         "Although that way may not be obvious " + \
                         "at first unless you're Guido.\n"
-                    self.assertEquals(new_lines[line - 1], expected_line_16)
+                    self.assertEqual(new_lines[line - 1], expected_line_16)
         self.assertFalse(mock_stdout.write.called)
 
     def test_command_line_check(self):
@@ -158,7 +158,7 @@ Namespaces are one honking great idea -- let's do more of those!
                 self.file.name])
             new_lines = open(self.file.name, "r").readlines()
             original_lines = self.text.splitlines(True)
-            self.assertEquals(original_lines, new_lines)
+            self.assertEqual(original_lines, new_lines)
         self.assertTrue(mock_stdout.write.called)
 
 if __name__ == "__main__":
