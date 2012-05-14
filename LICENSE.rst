@@ -1,4 +1,5 @@
-:
+::
+
   Copyright (c) 2012 Jerome Lecomte
 
   Permission is hereby granted, free of charge, to any person obtaining a copy 
