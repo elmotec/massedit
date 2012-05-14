@@ -28,7 +28,9 @@ See README.rst for more information.
 # THE SOFTWARE.
 
 
-__version__ = '0.51'  # Update setup.py when changing version.
+__version__ = '0.51'  # UPDATE setup.py when changing version.
+__author__ = 'Jerome Lecomte'
+__license__ = 'MIT'
 
 
 import os
