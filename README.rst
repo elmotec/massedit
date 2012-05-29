@@ -53,6 +53,8 @@ Download massedit.py from http://github.com/elmotec/massedit or :
 Plans
 -----
 
+- Improve handling of wildcard files.
+- Add support for reccursive processing of directories.
 - Add support for 3rd party tool (e.g. `autopep8`_) to process the files.
 - Add support for a file of expressions as an argument to allow multiple modification at once.
 - Find a satisfactory way (ie. easy to use) to handle multiline regex as the current version works on a line by line basis.
