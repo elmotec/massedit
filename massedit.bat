@@ -1,1 +1,1 @@
-python massedit.py %*
+python %~dp0\massedit.py %*
