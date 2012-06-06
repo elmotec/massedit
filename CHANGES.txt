@@ -1,0 +1,2 @@
+v0.51, 2012-05 -- Initial release (Beta).
+v0.52, 2012-06-05 -- Upgraded for python 3. Still compatible with python 2.7.
