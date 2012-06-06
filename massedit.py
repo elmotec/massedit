@@ -1,34 +1,29 @@
 #!/usr/bin/env python
 
-"""
-Implements a python bulk editor class to apply the same code to many files.
-
-See README.rst for more information.
-"""
-
+"""A python bulk editor class to apply the same code to many files."""
 
 # Copyright (c) 2012 Jerome Lecomte
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights 
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-# copies of the Software, and to permit persons to whom the Software is 
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in 
+#
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
 
-__version__ = '0.51'  # UPDATE setup.py when changing version.
+__version__ = '0.52'  # UPDATE setup.py when changing version.
 __author__ = 'Jerome Lecomte'
 __license__ = 'MIT'
 
@@ -38,15 +33,12 @@ import sys
 import logging
 import argparse
 import difflib
-import types
 # Most manip will involve re so we include it here for convenience.
 import re  # pylint: disable=W0611
 import glob
 
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stderr))
-logger.setLevel(logging.WARNING)
 
 
 class EditorError(RuntimeError):
@@ -77,8 +69,9 @@ class Editor(object):
         try:
             result = eval(code_obj, globals(), locals())
         except TypeError as ex:
-            raise EditorError("failed to execute {}: {}".format(
-                self._codes, ex))
+            message = "failed to execute {}: {}".format(self._codes, ex)
+            logger.warning(message)
+            raise EditorError(message)
         if not result:
             raise EditorError(
                     "cannot process line '{}' with {}".format(
@@ -103,17 +96,19 @@ class Editor(object):
         dry_run -- only return differences, but do not edit the file.
         """
         diffs = []
-        from_lines = open(file_name).readlines()
-        to_lines = [self.edit_line(line) for line in from_lines]
-        diffs = difflib.unified_diff(from_lines, to_lines,
-                    fromfile=file_name, tofile='<new>')
+        with open(file_name) as from_file:
+            from_lines = from_file.readlines()
+            to_lines = [self.edit_line(line) for line in from_lines]
+            diffs = difflib.unified_diff(from_lines, to_lines,
+                        fromfile=file_name, tofile='<new>')
         if not self.dry_run:
             bak_file_name = file_name + ".bak"
             if os.path.exists(bak_file_name):
                 raise EditorError("{} already exists".format(bak_file_name))
             try:
                 os.rename(file_name, bak_file_name)
-                open(file_name, "w").writelines(to_lines)
+                with open(file_name, "w") as new_file:
+                    new_file.writelines(to_lines)
                 os.unlink(bak_file_name)
             except:
                 os.rename(bak_file_name, file_name)
@@ -122,7 +117,7 @@ class Editor(object):
 
     def append_code_expr(self, code):
         """Compiles argument and adds it to the list of code objects."""
-        assert(isinstance(code, types.StringTypes))  # expect a string.
+        assert(isinstance(code, str))  # expect a string.
         logger.debug("compiling code {}...".format(code))
         try:
             code_obj = compile(code, '<string>', 'eval')
@@ -155,27 +150,6 @@ class Editor(object):
             globals()[mod] = __import__(mod.strip())
 
 
-def get_verbosity(verbose_count):
-    """Helper to convert a count of verbosity level to a logging level."""
-    assert(isinstance(verbose_count, int))
-    if verbose_count < 0:
-        verbose_count = 0
-    if verbose_count > 4:
-        verbose_count = 4
-    levels = [logging.ERROR, logging.WARNING,
-            logging.INFO, logging.DEBUG]
-    return levels[verbose_count]
-
-
-def setup_logger(verbose_count):
-    """Sets up a logger object for this script."""
-    logging.basicConfig(stream=sys.stderr)
-    verbosity = get_verbosity(verbose_count)
-    if (verbosity > 0):
-        logger.setLevel(verbosity)
-        logger.info("logger level set to {}".format(verbosity))
-
-
 def expand_wildcards(files):
     """Expands wildcards in argument in case it is not done by the shell."""
     all_files = []
@@ -189,10 +163,17 @@ def command_line(argv):
     example = """
         example: {} -e "re.sub('failIf', 'assertFalse', line)" test*.py""".\
                 format(os.path.basename(argv[0]))
-    parser = argparse.ArgumentParser(
-            description="Python based mass file editor",
-            version=__version__,
-            epilog=example)
+    if sys.version_info[0] < 3:
+        parser = argparse.ArgumentParser(
+                description="Python based mass file editor",
+                version=__version__,
+                epilog=example)
+    else:
+        parser = argparse.ArgumentParser(
+                description="Python based mass file editor",
+                epilog=example)
+        parser.add_argument("-v", "--version", action="version",
+                version="%(prog)s {}".format(__version__))
     parser.add_argument("-w", "--write", dest="write",
             action="store_true", default=False,
             help="modify target file(s) in place")
@@ -205,7 +186,8 @@ def command_line(argv):
     parser.add_argument('files', metavar="file", nargs='+',
             help="file to process with the expression. Modified in place.")
     arguments = parser.parse_args(argv[1:])
-    setup_logger(int(arguments.verbose_count))
+    # Sets log level to WARN going more verbose for each new -V.
+    logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     dry_run = not arguments.write
     editor = Editor(dry_run=dry_run)
     if arguments.expressions:
@@ -216,16 +198,13 @@ def command_line(argv):
     for infile in files:
         diffs = editor.edit_file(infile)
         if dry_run:
-            print("".join(diffs))
+            print(("".join(diffs)))
     return 1
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stderr)
-    os_status = 1
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     try:
         command_line(sys.argv)
-        os_status = 0
     finally:
         logging.shutdown()
-    sys.exit(os_status)
