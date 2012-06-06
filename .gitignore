@@ -1,0 +1,7 @@
+*.pyc
+*.swp
+*.tmp
+.unison/ar*
+.unison/fp*
+tags
+vimfiles/.*
