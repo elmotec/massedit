@@ -215,7 +215,7 @@ class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
                      "-e",  "re.sub('text', 'blah blah', line)",
                      "*.txt"]
         processed_files = massedit.command_line(arguments)
-        self.assertEquals(processed_files, [self.file_name])
+        self.assertEqual(processed_files, [self.file_name])
         with open(self.file_name) as fh:
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some blah blah"])
