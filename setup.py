@@ -5,16 +5,9 @@
 import os
 from setuptools import setup
 
-
-def read(fname):
-    """ Utility function to read the README file.
-
-    Used for the long_description.  It's nice, because now
-    1) we have a top level README file and
-    2) it's easier to type in the README file than to put string below ...
-    """
-    return open(os.path.join(os.path.dirname(__file__), fname), 'r').read()
-
+here = os.path.abspath(os.path.dirname(__file__))
+README = open(os.path.join(here, 'README.txt')).read()
+CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 setup(
     name="Python Mass Editor",
@@ -26,7 +19,7 @@ setup(
     keywords="sed editor stream python edit",
     url="http://github.com/elmotec/massedit",
     packages=[],
-    long_description=read('README.rst'),
+    long_description=README + "\n\n" + CHANGES,
     test_suite='tests',
     setup_requires=[],
     tests_require=['mock'],
