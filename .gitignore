@@ -3,5 +3,9 @@
 *.tmp
 .unison/ar*
 .unison/fp*
+.project
+.pydevproject
 tags
 vimfiles/.*
+venv
+Python_Mass_Editor.egg-info
