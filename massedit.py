@@ -223,7 +223,7 @@ def command_line(argv):
             processed_paths.append(os.path.abspath(path))
             diffs = editor.edit_file(path)
             if dry_run:
-                print("".join(diffs), file=args.output)
+                args.output.write("".join(diffs))
     if args.output != sys.stdout:
         args.output.close()
     return processed_paths
