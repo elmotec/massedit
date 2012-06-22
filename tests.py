@@ -130,6 +130,7 @@ Namespaces are one honking great idea -- let's do more of those!
     def tearDown(self):
         """Removes the temporary file."""
         os.unlink(self.file_name)
+        os.rmdir(self.start_directory)
 
     def test_setup(self):
         """Checks that we have a temporary file to work with."""
@@ -187,6 +188,22 @@ Namespaces are one honking great idea -- let's do more of those!
         original_lines = self.text.splitlines(True)
         self.assertEqual(original_lines, new_lines)
         self.assertTrue(os.path.exists(out_file_name))
+        os.unlink(out_file_name)
+
+    def test_absolute_path_arg(self):
+        """Checks dry run via command line without -w option."""
+        out_file_name = tempfile.mktemp()
+        arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
+                     "-o", out_file_name, self.file_name]
+        processed_paths = massedit.command_line(arguments)
+        self.assertEqual(processed_paths,
+                         [os.path.abspath(self.file_name)])
+        with open(self.file_name, "r") as updated_file:
+            new_lines = updated_file.readlines()
+        original_lines = self.text.splitlines(True)
+        self.assertEqual(original_lines, new_lines)
+        self.assertTrue(os.path.exists(out_file_name))
+        os.unlink(out_file_name)
 
 
 class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904

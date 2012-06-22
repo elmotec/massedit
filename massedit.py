@@ -154,20 +154,21 @@ def parse_command_line(argv):
     argv -- arguments on the command line including the caller file.
     """
     example = """
-    example: {} -e "re.sub('failIf', 'assertFalse', line)" test*.py
+    example: {} -e "re.sub('failIf', 'assertFalse', line)" *.py
     """.format(os.path.basename(argv[0]))
     if sys.version_info[0] < 3:
-        parser = argparse.ArgumentParser(description="Python mass file editor",
+        parser = argparse.ArgumentParser(description="Python mass editor",
                                          version=__version__,
                                          epilog=example)
     else:
-        parser = argparse.ArgumentParser(description="Python mass file editor",
+        parser = argparse.ArgumentParser(description="Python mass editor",
                                          epilog=example)
         parser.add_argument("-v", "--version", action="version",
                             version="%(prog)s {}".format(__version__))
     parser.add_argument("-w", "--write", dest="write",
                         action="store_true", default=False,
-                        help="modify target file(s) in place")
+                        help="modify target file(s) in place. "
+                        "Shows diff otherwise.")
     parser.add_argument("-V", "--verbose", dest="verbose_count",
                         action="count", default=0,
                         help="increases log verbosity (can be specified "
@@ -177,18 +178,27 @@ def parse_command_line(argv):
                         "Use the line variable to reference the current line.")
     parser.add_argument("-s", "--start", dest="startdir", default=".",
                         help="Starting directory in which to look for the "
-                        "files.")
-    parser.add_argument('-m', "--max-depth-level", type=int, dest="subdir",
+                        "files. If there is one pattern only and it includes "
+                        "a directory, the start dir will be that directory "
+                        "and the max depth level will be set to 1.")
+    parser.add_argument('-m', "--max-depth-level", type=int, dest="maxdepth",
                         help="Maximum depth when walking subdirectories.")
     parser.add_argument('-o', '--output', metavar="output",
                         type=argparse.FileType('w'), default=sys.stdout,
                         help="redirect output to a file")
     parser.add_argument('patterns', metavar="pattern", nargs='+',
-                        help="file patterns to process. "
-                        "Modify in place with -w.")
+                        help="file patterns to process.")
     arguments = parser.parse_args(argv[1:])
     # Sets log level to WARN going more verbose for each new -V.
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
+    # Short cut. See -s option.
+    if len(arguments.patterns) == 1:
+        pattern = arguments.patterns[0]
+        directory = os.path.dirname(pattern)
+        if directory:
+            arguments.patterns = [os.path.basename(pattern)]
+            arguments.startdir = directory
+            arguments.maxdepth = 1
     return arguments
 
 
