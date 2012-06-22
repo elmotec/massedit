@@ -16,29 +16,41 @@ same code in many files.
 Usage
 -----
 
-You probably will need to know the basics of the `Python re module`_ (regular expressions).
+You probably will need to know the basics of the `Python re module`_ (regular 
+expressions).
 
 ::
 
-  usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] file [file ...]
+usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] [-s STARTDIR]
+                   [-m MAXDEPTH] [-o output]
+                   pattern [pattern ...]
 
-  Python based mass file editor
-  
-  positional arguments:
-    file                  file to process with the expression. Modified in
-                          place.
-  
-  optional arguments:
-    -h, --help            show this help message and exit
-    -v, --version         show program's version number and exit
-    -w, --write           modify target file(s) in place
-    -V, --verbose         increases log verbosity (can be specified multiple
-                          times)
-    -e EXPRESSIONS, --expression EXPRESSIONS
-                          Python expressions to be applied on all files. Use the
-                          line variable to reference the current line.
-  
-  example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" test*.py
+Python mass editor
+
+positional arguments:
+  pattern               file patterns to process.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  -w, --write           modify target file(s) in place. Shows diff otherwise.
+  -V, --verbose         increases log verbosity (can be specified multiple
+                        times)
+  -e EXPRESSIONS, --expression EXPRESSIONS
+                        Python expressions to be applied on all files. Use the
+                        line variable to reference the current line.
+  -s STARTDIR, --start STARTDIR
+                        Starting directory in which to look for the files. If
+                        there is one pattern only and it includes a directory,
+                        the start dir will be that directory and the max depth
+                        level will be set to 1.
+  -m MAXDEPTH, --max-depth-level MAXDEPTH
+                        Maximum depth when walking subdirectories.
+  -o output, --output output
+                        redirect output to a file
+
+example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
+
   
 or if massedit is installed as a package (from pypi for instance) :
 
@@ -61,20 +73,22 @@ Download massedit.py from http://github.com/elmotec/massedit or :
 Plans
 -----
 
-- Improve handling of wildcard files.
-- Add support for reccursive processing of directories.
 - Add support for 3rd party tool (e.g. `autopep8`_) to process the files.
-- Add support for a file of expressions as an argument to allow multiple modification at once.
-- Find a satisfactory way (ie. easy to use) to handle multiline regex as the current version works on a line by line basis.
+- Add support for a file of expressions as an argument to allow multiple 
+modification at once.
+- Find a satisfactory way (ie. easy to use) to handle multiline regex as the 
+current version works on a line by line basis.
 - Add magic variables ``lineno`` and ``filename`` in addition to ``line``.
 
 
 Rationale
 ---------
 
-- I have a hard time practicing more than a few dialects of regular expressions. 
+- I have a hard time practicing more than a few dialects of regular 
+expressions. 
 - I need something portable to Windows without being bothered by eol. 
-- I believe Python is the ideal tool to build something more powerful than simple regex based substitutions.
+- I believe Python is the ideal tool to build something more powerful than 
+simple regex based substitutions.
 
 
 History
