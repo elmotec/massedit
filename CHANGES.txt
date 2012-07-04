@@ -1,2 +1,12 @@
-v0.51, 2012-05 -- Initial release (Beta).
-v0.52, 2012-06-05 -- Upgraded for python 3. Still compatible with python 2.7.
+::
+
+  CHANGES:
+
+  0.60 (2012-07-04):
+  Treats arguments as patterns rather than files to ease processing of 
+  multiple files in multiple subdirectories.  Added -s (start directory)
+  and -m (max depth) options. 
+
+  0.52 (2012-06-05): Upgraded for python 3. Still compatible with python 2.7.
+
+  0.51 (2012-05): Initial release (Beta).

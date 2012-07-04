@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 
-__version__ = '0.52'  # UPDATE setup.py when changing version.
+__version__ = '0.60'  # UPDATE setup.py when changing version.
 __author__ = 'Jerome Lecomte'
 __license__ = 'MIT'
 
