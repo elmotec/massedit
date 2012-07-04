@@ -203,29 +203,35 @@ def parse_command_line(argv):
 
 
 def command_line(argv):
-    """Instantiate an editor and process args.
+    """Instantiate an editor and process arguments.
 
     Optional argument:
     processed_paths -- paths processed are appended to the list.
     """
     processed_paths = []
-    args = parse_command_line(argv)
-    dry_run = not args.write
+    arguments = parse_command_line(argv)
+    dry_run = not arguments.write
     editor = Editor(dry_run=dry_run)
-    if args.expressions:
-        editor.set_code_expr(args.expressions)
-    for root, dirs, files in os.walk(args.startdir):  # pylint: disable=W0612
+    if arguments.expressions:
+        editor.set_code_expr(arguments.expressions)
+    for root, dirs, files in \
+            os.walk(arguments.startdir):  # pylint: disable=W0612
+        if arguments.maxdepth is not None:
+            relpath = os.path.relpath(root, start=arguments.startdir)
+            depth = len(relpath.split(os.sep))
+            if depth > arguments.maxdepth:
+                continue
         names = []
-        for pattern in args.patterns:
+        for pattern in arguments.patterns:
             names += fnmatch.filter(files, pattern)
         for name in names:
             path = os.path.join(root, name)
             processed_paths.append(os.path.abspath(path))
             diffs = editor.edit_file(path)
             if dry_run:
-                args.output.write("".join(diffs))
-    if args.output != sys.stdout:
-        args.output.close()
+                arguments.output.write("".join(diffs))
+    if arguments.output != sys.stdout:
+        arguments.output.close()
     return processed_paths
 
 
