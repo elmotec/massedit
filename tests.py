@@ -237,6 +237,17 @@ class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some blah blah"])
 
+    def test_maxdepth_one(self):
+        """Checks that specifying -m 1 prevents modifiction to subdir."""
+        arguments = ["-r", "-s", self.directory, "-w",
+                     "-e",  "re.sub('text', 'blah blah', line)",
+                     "-m", "0", "*.txt"]
+        processed_files = massedit.command_line(arguments)
+        self.assertEqual(processed_files, [])
+        with open(self.file_name) as fh:
+            new_lines = fh.readlines()
+        self.assertEqual(new_lines, ["some text"])
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
