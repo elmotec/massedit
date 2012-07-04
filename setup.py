@@ -7,7 +7,6 @@ from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
-CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 setup(
     name="Python Mass Editor",
@@ -19,7 +18,7 @@ setup(
     keywords="sed editor stream python edit",
     url="http://github.com/elmotec/massedit",
     packages=[],
-    long_description=README + "\n\n" + CHANGES,
+    long_description=README,
     test_suite='tests',
     setup_requires=[],
     tests_require=['mock'],

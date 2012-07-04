@@ -98,8 +98,8 @@ Rationale
   simple regex based substitutions.
 
 
-History
--------
+Background
+----------
 
 I have been using runsed and checksed (from Unix Power Tools) for years and
 did not find a good substitute under Windows until I came across Graham 
@@ -118,6 +118,20 @@ License
 
 Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
+
+Changes
+-------
+
+0.60 (2012-07-04)
+  Treats arguments as patterns rather than files to ease processing of 
+  multiple files in multiple subdirectories.  Added -s (start directory)
+  and -m (max depth) options. 
+
+0.52 (2012-06-05)
+  Upgraded for python 3. Still compatible with python 2.7.
+
+0.51 (2012-05)
+  Initial release (Beta).
 
 
 .. _437932: http://code.activestate.com/recipes/437932-pyline-a-grep-like-sed-like-command-line-tool/
