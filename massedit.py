@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 
-__version__ = '0.60'  # UPDATE setup.py when changing version.
+__version__ = '0.61'  # UPDATE setup.py when changing version.
 __author__ = 'Jerome Lecomte'
 __license__ = 'MIT'
 
@@ -165,8 +165,8 @@ def parse_command_line(argv):
                                          epilog=example)
         parser.add_argument("-v", "--version", action="version",
                             version="%(prog)s {}".format(__version__))
-    parser.add_argument("-w", "--write", dest="write",
-                        action="store_true", default=False,
+    parser.add_argument("-w", "--write", dest="dry_run",
+                        action="store_false", default=True,
                         help="modify target file(s) in place. "
                         "Shows diff otherwise.")
     parser.add_argument("-V", "--verbose", dest="verbose_count",
@@ -176,12 +176,12 @@ def parse_command_line(argv):
     parser.add_argument('-e', "--expression", dest="expressions", nargs=1,
                         help="Python expressions to be applied on all files. "
                         "Use the line variable to reference the current line.")
-    parser.add_argument("-s", "--start", dest="startdir", default=".",
+    parser.add_argument("-s", "--start", dest="start_dir",
                         help="Starting directory in which to look for the "
                         "files. If there is one pattern only and it includes "
                         "a directory, the start dir will be that directory "
                         "and the max depth level will be set to 1.")
-    parser.add_argument('-m', "--max-depth-level", type=int, dest="maxdepth",
+    parser.add_argument('-m', "--max-depth-level", type=int, dest="max_depth",
                         help="Maximum depth when walking subdirectories.")
     parser.add_argument('-o', '--output', metavar="output",
                         type=argparse.FileType('w'), default=sys.stdout,
@@ -191,15 +191,58 @@ def parse_command_line(argv):
     arguments = parser.parse_args(argv[1:])
     # Sets log level to WARN going more verbose for each new -V.
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
-    # Short cut. See -s option.
-    if len(arguments.patterns) == 1:
-        pattern = arguments.patterns[0]
+    return arguments
+
+
+def edit_files(patterns, expressions,  # pylint: disable=R0913, R0914
+               start_dir=None, max_depth=1, dry_run=True,
+               output=sys.stdout):
+    """Edits the files that match patterns with python expressions. Each
+    expression is run (using eval()) line by line on each input file.
+
+    Keyword Arguments:
+    max_depth -- maximum recursion level when looking for file matches.
+    start_dir -- directory where to start the file search.
+    dry_run -- only display differences if True. Save modified file otherwise.
+    output -- handle where the output should be redirected.
+    """
+    # Makes for a better diagnostic because str are also iterable.
+    assert not isinstance(patterns, str), "patterns should be a list"
+    assert not isinstance(expressions, str), "expressions should be a list"
+
+    # Shortcut: if there is only one pattern, make sure we process just that.
+    if len(patterns) == 1 and not start_dir:
+        pattern = patterns[0]
         directory = os.path.dirname(pattern)
         if directory:
-            arguments.patterns = [os.path.basename(pattern)]
-            arguments.startdir = directory
-            arguments.maxdepth = 1
-    return arguments
+            patterns = [os.path.basename(pattern)]
+            start_dir = directory
+            max_depth = 1
+
+    processed_paths = []
+    editor = Editor(dry_run=dry_run)
+    if expressions:
+        editor.set_code_expr(expressions)
+    if not start_dir:
+        start_dir = os.getcwd()
+    for root, dirs, files in os.walk(start_dir):  # pylint: disable=W0612
+        if max_depth is not None:
+            relpath = os.path.relpath(root, start=start_dir)
+            depth = len(relpath.split(os.sep))
+            if depth > max_depth:
+                continue
+        names = []
+        for pattern in patterns:
+            names += fnmatch.filter(files, pattern)
+        for name in names:
+            path = os.path.join(root, name)
+            processed_paths.append(os.path.abspath(path))
+            diffs = editor.edit_file(path)
+            if dry_run:
+                output.write("".join(diffs))
+    if output != sys.stdout:
+        output.close()
+    return processed_paths
 
 
 def command_line(argv):
@@ -208,31 +251,12 @@ def command_line(argv):
     Optional argument:
     processed_paths -- paths processed are appended to the list.
     """
-    processed_paths = []
     arguments = parse_command_line(argv)
-    dry_run = not arguments.write
-    editor = Editor(dry_run=dry_run)
-    if arguments.expressions:
-        editor.set_code_expr(arguments.expressions)
-    for root, dirs, files in \
-            os.walk(arguments.startdir):  # pylint: disable=W0612
-        if arguments.maxdepth is not None:
-            relpath = os.path.relpath(root, start=arguments.startdir)
-            depth = len(relpath.split(os.sep))
-            if depth > arguments.maxdepth:
-                continue
-        names = []
-        for pattern in arguments.patterns:
-            names += fnmatch.filter(files, pattern)
-        for name in names:
-            path = os.path.join(root, name)
-            processed_paths.append(os.path.abspath(path))
-            diffs = editor.edit_file(path)
-            if dry_run:
-                arguments.output.write("".join(diffs))
-    if arguments.output != sys.stdout:
-        arguments.output.close()
-    return processed_paths
+    return edit_files(arguments.patterns, arguments.expressions,
+                      start_dir=arguments.start_dir,
+                      max_depth=arguments.max_depth,
+                      dry_run=arguments.dry_run,
+                      output=arguments.output)
 
 
 if __name__ == "__main__":

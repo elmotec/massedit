@@ -5,7 +5,7 @@ Implements a python mass editor class to process multiple files using Python
 code. The modification(s) is (are) shown on stdout as a diff output. One
 can then modify the target file(s) in place with the -w/--write option.
 
-.. ATTENTION::
+.. WARNING::
 
   This tool is usefull as far as it goes but it does rely on the python 
   ``eval()`` function and does not check the code being executed. 
@@ -43,12 +43,12 @@ expressions).
     -e EXPRESSIONS, --expression EXPRESSIONS
                           Python expressions to be applied on all files. Use the
                           line variable to reference the current line.
-    -s STARTDIR, --start STARTDIR
+    -s START_DIR, --start START_DIR
                           Starting directory in which to look for the files. If
                           there is one pattern only and it includes a directory,
                           the start dir will be that directory and the max depth
                           level will be set to 1.
-    -m MAXDEPTH, --max-depth-level MAXDEPTH
+    -m MAX_DEPTH, --max-depth-level MAX_DEPTH
                           Maximum depth when walking subdirectories.
     -o output, --output output
                           redirect output to a file
@@ -56,14 +56,24 @@ expressions).
   example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
   
     
-or if massedit is installed as a package (from pypi for instance) :
+If massedit is installed as a package (from pypi for instance), one can 
+interact with it as a command line tool :
 
 ::
 
   python -m massedit -e "re.sub('assertEquals', 'assertEqual', line)" test.py
 
 
-There is also a convenient ``massedit.bat`` wrapper for Windows included in
+Or as a library (command line option above to be passed as kewyord arguments):
+
+::
+
+  >>> import massedit
+  >>> filenames = ['massedit.py']
+  >>> massedit.edit_files(filenames, ["re.sub('Jerome', 'J.', line)"])
+  
+
+Lastly, there is a convenient ``massedit.bat`` wrapper for Windows included in
 the distribution.
 
 
@@ -121,6 +131,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
 Changes
 -------
+
+0.61 (2012-07-06)
+  Added massedit.edit_files function to ease usage as library instead of as
+  a command line tool (suggested by Maxim Veksler).
 
 0.60 (2012-07-04)
   Treats arguments as patterns rather than files to ease processing of 

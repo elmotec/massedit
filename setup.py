@@ -10,7 +10,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 
 setup(
     name="Python Mass Editor",
-    version="0.60",
+    version="0.61",
     author="Jerome Lecomte",
     author_email="jlecomte1972@yahoo.com",
     description='Edit multiple files using Python text processing modules',

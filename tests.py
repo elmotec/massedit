@@ -152,7 +152,6 @@ Namespaces are one honking great idea -- let's do more of those!
 
     def test_command_line_replace(self):
         """Checks simple replacement via command line."""
-
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
@@ -174,7 +173,7 @@ Namespaces are one honking great idea -- let's do more of those!
                 self.assertEqual(new_lines[line - 1], expected_line_16)
 
     def test_command_line_check(self):
-        """Checks dry run via command line triggers write to output."""
+        """Checks dry run via command line with start directory option."""
         out_file_name = tempfile.mktemp()
         basename = os.path.basename(self.file_name)
         arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
@@ -191,9 +190,9 @@ Namespaces are one honking great idea -- let's do more of those!
         os.unlink(out_file_name)
 
     def test_absolute_path_arg(self):
-        """Checks dry run via command line without -w option."""
+        """Checks dry run via command line with single file name argument."""
         out_file_name = tempfile.mktemp()
-        arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
+        arguments = ["massedit.py", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name, self.file_name]
         processed_paths = massedit.command_line(arguments)
         self.assertEqual(processed_paths,
@@ -204,6 +203,29 @@ Namespaces are one honking great idea -- let's do more of those!
         self.assertEqual(original_lines, new_lines)
         self.assertTrue(os.path.exists(out_file_name))
         os.unlink(out_file_name)
+
+    def test_api(self):
+        """Checks simple replacement via api."""
+        file_base_name = os.path.basename(self.file_name)
+        processed_paths = massedit.edit_files([file_base_name],
+                            ["re.sub('Dutch', 'Guido', line)"],
+                            start_dir=self.start_directory,
+                            dry_run=False)
+        self.assertEqual(processed_paths, [self.file_name])
+        with open(self.file_name, "r") as new_file:
+            new_lines = new_file.readlines()
+        original_lines = self.text.splitlines(True)
+        self.assertEqual(len(new_lines), len(original_lines))
+        n_lines = len(new_lines)
+        for line in range(n_lines):
+            if line != 16:
+                self.assertEqual(new_lines[line - 1],
+                                 original_lines[line - 1])
+            else:
+                expected_line_16 = \
+                    "Although that way may not be obvious " + \
+                    "at first unless you're Guido.\n"
+                self.assertEqual(new_lines[line - 1], expected_line_16)
 
 
 class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
