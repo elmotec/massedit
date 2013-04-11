@@ -73,7 +73,7 @@ class Editor(object):
             message = "failed to execute {}: {}".format(code, ex)
             logger.warning(message)
             raise EditorError(message)
-        if not result:
+        if result is None:
             raise EditorError("cannot process line '{}' with {}".format(
                               line, code))
         elif isinstance(result, list) or isinstance(result, tuple):
