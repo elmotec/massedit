@@ -27,7 +27,10 @@ import os
 import sys
 import logging
 import unittest
-import mock
+if sys.version_info < (3, 3):
+    import mock
+else:
+    from unittest import mock
 import tempfile
 
 import massedit
@@ -57,6 +60,14 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         new_line = editor.edit_line(original_line)
         self.assertEqual(new_line, 'What a nice horse!')
         self.assertEqual(original_line, 'What a nice cat!')
+
+    def test_replace_all(self):
+        """Tests replacement of an entire line."""
+        editor = massedit.Editor()
+        original_line = 'all of it'
+        editor.append_code_expr("re.sub('all of it', '', line)")
+        new_line = editor.edit_line(original_line)
+        self.assertEqual(new_line, '')
 
     def test_syntax_error(self):
         """Checks we get a SyntaxError if the code is not valid."""
