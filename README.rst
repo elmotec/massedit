@@ -24,16 +24,16 @@ You probably will need to know the basics of the `Python re module`_ (regular
 expressions).
 
 ::
-
-  usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] [-s STARTDIR]
-                     [-m MAXDEPTH] [-o output]
+  
+  usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] [-s START_DIR]
+                     [-m MAX_DEPTH] [-o output]
                      pattern [pattern ...]
-
+  
   Python mass editor
   
   positional arguments:
-    pattern               file patterns to process.
-
+    pattern               shell-like file name patterns to process.
+  
   optional arguments:
     -h, --help            show this help message and exit
     -v, --version         show program's version number and exit
@@ -41,19 +41,24 @@ expressions).
     -V, --verbose         increases log verbosity (can be specified multiple
                           times)
     -e EXPRESSIONS, --expression EXPRESSIONS
-                          Python expressions to be applied on all files. Use the
+                          Python expressions applied to target files. Use the
                           line variable to reference the current line.
     -s START_DIR, --start START_DIR
-                          Starting directory in which to look for the files. If
-                          there is one pattern only and it includes a directory,
-                          the start dir will be that directory and the max depth
-                          level will be set to 1.
+                          Directory from which to look for target files.
     -m MAX_DEPTH, --max-depth-level MAX_DEPTH
                           Maximum depth when walking subdirectories.
     -o output, --output output
                           redirect output to a file
   
-  example: massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
+  Examples:
+  # Simple string substitution. Will show a diff. No changes applied.
+  massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
+  
+  # Simple string substitution. Overwrites the files in place.
+  massedit.py -w -e "re.sub('failIf', 'assertFalse', line)" *.py
+  
+  # Will change all test*.py in subdirectories of tests.
+  massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
   
     
 If massedit is installed as a package (from pypi for instance), one can 
@@ -131,6 +136,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
 Changes
 -------
+
+0.62 (2013-04-11)
+  Fixed bug that caused an EditorError to be raised when the result of the
+  expression is an empty string.
 
 0.61 (2012-07-06)
   Added massedit.edit_files function to ease usage as library instead of as
