@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# vim: set encoding=utf-8
 
 """Packaging script."""
 
@@ -10,7 +11,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 
 setup(
     name="Python Mass Editor",
-    version="0.61",
+    version="0.62",
     author="Jerome Lecomte",
     author_email="jlecomte1972@yahoo.com",
     description='Edit multiple files using Python text processing modules',

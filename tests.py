@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# vim: set fileencoding='cp1252'
+# vim: set encoding='utf-8'
 
 """Test module to test massedit."""
 
@@ -190,8 +190,8 @@ Namespaces are one honking great idea -- let's do more of those!
         arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name, "-s", self.start_directory,
                      basename]
-        processed_paths = massedit.command_line(arguments)
-        self.assertEqual(processed_paths,
+        processed = massedit.command_line(arguments)
+        self.assertEqual(processed,
                          [os.path.abspath(self.file_name)])
         with open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
@@ -205,8 +205,8 @@ Namespaces are one honking great idea -- let's do more of those!
         out_file_name = tempfile.mktemp()
         arguments = ["massedit.py", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name, self.file_name]
-        processed_paths = massedit.command_line(arguments)
-        self.assertEqual(processed_paths,
+        processed = massedit.command_line(arguments)
+        self.assertEqual(processed,
                          [os.path.abspath(self.file_name)])
         with open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
@@ -218,11 +218,11 @@ Namespaces are one honking great idea -- let's do more of those!
     def test_api(self):
         """Checks simple replacement via api."""
         file_base_name = os.path.basename(self.file_name)
-        processed_paths = massedit.edit_files([file_base_name],
-                            ["re.sub('Dutch', 'Guido', line)"],
-                            start_dir=self.start_directory,
-                            dry_run=False)
-        self.assertEqual(processed_paths, [self.file_name])
+        processed = massedit.edit_files([file_base_name],
+                                        ["re.sub('Dutch', 'Guido', line)"],
+                                        start_dir=self.start_directory,
+                                        dry_run=False)
+        self.assertEqual(processed, [self.file_name])
         with open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
         original_lines = self.text.splitlines(True)

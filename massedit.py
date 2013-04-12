@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encoding='cp1252'
+# vim: set encoding='utf-8'
 
 """A python bulk editor class to apply the same code to many files."""
 
@@ -156,7 +156,7 @@ def parse_command_line(argv):
     import textwrap
 
     example = textwrap.dedent("""
-    Examples: 
+    Examples:
     # Simple string substitution. Will show a diff. No changes applied.
     {0} -e "re.sub('failIf', 'assertFalse', line)" *.py
 
