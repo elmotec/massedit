@@ -5,6 +5,8 @@
 .unison/fp*
 .project
 .pydevproject
+dist/
+sdist/
 tags
 vimfiles/.*
 venv
