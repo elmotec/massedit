@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 
-__version__ = '0.61'  # UPDATE setup.py when changing version.
+__version__ = '0.62'  # UPDATE setup.py when changing version.
 __author__ = 'Jerome Lecomte'
 __license__ = 'MIT'
 
@@ -153,16 +153,29 @@ def parse_command_line(argv):
 
     argv -- arguments on the command line including the caller file.
     """
-    example = """
-    example: {} -e "re.sub('failIf', 'assertFalse', line)" *.py
-    """.format(os.path.basename(argv[0]))
+    import textwrap
+
+    example = textwrap.dedent("""
+    Examples: 
+    # Simple string substitution. Will show a diff. No changes applied.
+    {0} -e "re.sub('failIf', 'assertFalse', line)" *.py
+
+    # Simple string substitution. Overwrites the files in place.
+    {0} -w -e "re.sub('failIf', 'assertFalse', line)" *.py
+
+    # Will change all test*.py in subdirectories of tests.
+    {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+    """).format(os.path.basename(argv[0]))
+    formatter_class = argparse.RawDescriptionHelpFormatter
     if sys.version_info[0] < 3:
         parser = argparse.ArgumentParser(description="Python mass editor",
                                          version=__version__,
-                                         epilog=example)
+                                         epilog=example,
+                                         formatter_class=formatter_class)
     else:
         parser = argparse.ArgumentParser(description="Python mass editor",
-                                         epilog=example)
+                                         epilog=example,
+                                         formatter_class=formatter_class)
         parser.add_argument("-v", "--version", action="version",
                             version="%(prog)s {}".format(__version__))
     parser.add_argument("-w", "--write", dest="dry_run",
@@ -174,20 +187,17 @@ def parse_command_line(argv):
                         help="increases log verbosity (can be specified "
                         "multiple times)")
     parser.add_argument('-e', "--expression", dest="expressions", nargs=1,
-                        help="Python expressions to be applied on all files. "
+                        help="Python expressions applied to target files. "
                         "Use the line variable to reference the current line.")
     parser.add_argument("-s", "--start", dest="start_dir",
-                        help="Starting directory in which to look for the "
-                        "files. If there is one pattern only and it includes "
-                        "a directory, the start dir will be that directory "
-                        "and the max depth level will be set to 1.")
+                        help="Directory from which to look for target files.")
     parser.add_argument('-m', "--max-depth-level", type=int, dest="max_depth",
                         help="Maximum depth when walking subdirectories.")
     parser.add_argument('-o', '--output', metavar="output",
                         type=argparse.FileType('w'), default=sys.stdout,
                         help="redirect output to a file")
     parser.add_argument('patterns', metavar="pattern", nargs='+',
-                        help="file patterns to process.")
+                        help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
     # Sets log level to WARN going more verbose for each new -V.
     logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
