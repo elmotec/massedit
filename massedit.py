@@ -269,9 +269,13 @@ def command_line(argv):
                       output=arguments.output)
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     try:
         command_line(sys.argv)
     finally:
         logging.shutdown()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
