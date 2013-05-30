@@ -1,5 +1,8 @@
-Python Mass Editor
-==================
+massedit 
+========
+
+formerly known as Python Mass Editor
+------------------------------------
 
 Implements a python mass editor class to process multiple files using Python
 code. The modification(s) is (are) shown on stdout as a diff output. One
@@ -119,7 +122,7 @@ Background
 I have been using runsed and checksed (from Unix Power Tools) for years and
 did not find a good substitute under Windows until I came across Graham 
 Fawcett python recipe 437932_ on ActiveState. It inspired me to write the 
-Python Mass Editor.
+massedit.
 
 The core was fleshed up a little, and here we are. If you find it useful and
 enhance it please, do not forget to submit patches. Thanks!
@@ -136,6 +139,9 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
 Changes
 -------
+
+0.63 (2013-05-27)
+  Renamed to massedit. Previous version are still known as Python-Mass-Editor.
 
 0.62 (2013-04-11)
   Fixed bug that caused an EditorError to be raised when the result of the

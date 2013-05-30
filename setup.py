@@ -10,13 +10,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
 setup(
-    name="Python Mass Editor",
-    version="0.62",
-    author="Jerome Lecomte",
+    name="massedit",
+    version="0.63",
+    author="Jérôme Lecomte",
     author_email="jlecomte1972@yahoo.com",
     description='Edit multiple files using Python text processing modules',
     license="MIT",
-    keywords="sed editor stream python edit",
+    keywords="sed editor stream python edit mass",
     url="http://github.com/elmotec/massedit",
     packages=[],
     long_description=README,
