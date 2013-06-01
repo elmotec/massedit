@@ -140,6 +140,9 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.64 (2013-06-01)
+  Fixed setup.py so that massedit installs as a script. Fixed eol issues. Thanks myint.
+
 0.63 (2013-05-27)
   Renamed to massedit. Previous version are still known as Python-Mass-Editor.
 
@@ -161,6 +164,13 @@ Changes
 
 0.51 (2012-05)
   Initial release (Beta).
+
+
+Contributor acknowledgement
+---------------------------
+
+Steven Myint, https://github.com/myint
+
 
 
 .. _437932: http://code.activestate.com/recipes/437932-pyline-a-grep-like-sed-like-command-line-tool/
