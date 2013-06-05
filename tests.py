@@ -32,86 +32,12 @@ if sys.version_info < (3, 3):
 else:
     from unittest import mock
 import tempfile
+import io
 
 import massedit
 
 
-def remove_module(module_name):
-    """Removes the module from memory."""
-    if module_name in sys.modules:
-        del(sys.modules[module_name])
-
-
-class TestEditor(unittest.TestCase):  # pylint: disable=R0904
-    """Tests the massedit module."""
-
-    def test_no_change(self):
-        """Tests the editor does nothing when not told to do anything."""
-        editor = massedit.Editor()
-        input_line = "some info"
-        output_line = editor.edit_line(input_line)
-        self.assertEqual(output_line, input_line)
-
-    def test_simple_replace(self):
-        """Simple replacement check."""
-        editor = massedit.Editor()
-        original_line = 'What a nice cat!'
-        editor.append_code_expr("re.sub('cat','horse',line)")
-        new_line = editor.edit_line(original_line)
-        self.assertEqual(new_line, 'What a nice horse!')
-        self.assertEqual(original_line, 'What a nice cat!')
-
-    def test_replace_all(self):
-        """Tests replacement of an entire line."""
-        editor = massedit.Editor()
-        original_line = 'all of it'
-        editor.append_code_expr("re.sub('all of it', '', line)")
-        new_line = editor.edit_line(original_line)
-        self.assertEqual(new_line, '')
-
-    def test_syntax_error(self):
-        """Checks we get a SyntaxError if the code is not valid."""
-        editor = massedit.Editor()
-        with mock.patch('massedit.logger', auto_spec=True):
-            with self.assertRaises(SyntaxError):
-                editor.append_code_expr("invalid expression")
-                self.assertIsNone(editor.code_objs)
-
-    def test_invalid_code_expr2(self):
-        """Checks we get a SyntaxError if the code is missing an argument."""
-        editor = massedit.Editor()
-        editor.append_code_expr("re.sub('def test', 'def toast')")
-        with self.assertRaises(massedit.EditorError):
-            editor.edit_line('some line')
-
-    @unittest.skip("FIXME. Will revisit this one.")
-    def test_missing_module(self):
-        """Checks that missing module generates an exception."""
-        remove_module('random')
-        self.assertNotIn('random', sys.modules)
-        editor = massedit.Editor()
-        #random.randint(0,10)  # Fails as it should.
-        editor.append_code_expr('random.randint(0,10)')  # works ?!
-        with self.assertRaises(NameError):
-            editor.append_code_expr("random.randint(0,10)")  # Houston...
-
-    @unittest.skip("FIXME. remove_module causes problem with os.urandom.")
-    def test_module_import(self):
-        """Checks the module import functinality."""
-        remove_module('random')
-        editor = massedit.Editor()
-        editor.import_module('random')
-        editor.append_code_expr('random.randint(0,9)')
-        random_number = editor.edit_line('to be replaced')
-        self.assertIn(random_number, [str(x) for x in range(10)])
-
-
-class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
-    """Tests the command line interface of massedit.py."""
-    def setUp(self):
-        """Creates a temporary file to work with."""
-
-        self.text = """The Zen of Python, by Tim Peters
+zen = """The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
 Explicit is better than implicit.
@@ -133,6 +59,108 @@ If the implementation is hard to explain, it's a bad idea.
 If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea -- let's do more of those!
 """
+
+
+def dutch_is_guido(lines):
+    """Helper function that substitute Dutch with Guido."""
+    import re
+    for line in lines:
+        yield re.sub('Dutch', 'Guido', line)
+
+
+def remove_module(module_name):
+    """Removes the module from memory."""
+    if module_name in sys.modules:
+        del(sys.modules[module_name])
+
+
+class TestGetFunction(unittest.TestCase):
+    """Tests the functon get_function."""
+    def test_simple_retrieval(self):
+        function = massedit.get_function('tests:remove_module')
+        # Functions are not the same but the code is.
+        self.assertEqual(remove_module.__code__, function.__code__)
+
+
+class TestEditor(unittest.TestCase):  # pylint: disable=R0904
+    """Tests the massedit module."""
+
+    def setUp(self):
+        self.editor = massedit.Editor()
+    
+    def test_no_change(self):
+        """Tests the editor does nothing when not told to do anything."""
+        input_line = "some info"
+        output_line = self.editor.edit_line(input_line)
+        self.assertEqual(output_line, input_line)
+
+    def test_simple_replace(self):
+        """Simple replacement check."""
+        original_line = 'What a nice cat!'
+        self.editor.append_code_expr("re.sub('cat','horse',line)")
+        new_line = self.editor.edit_line(original_line)
+        self.assertEqual(new_line, 'What a nice horse!')
+        self.assertEqual(original_line, 'What a nice cat!')
+
+    def test_replace_all(self):
+        """Tests replacement of an entire line."""
+        original_line = 'all of it'
+        self.editor.append_code_expr("re.sub('all of it', '', line)")
+        new_line = self.editor.edit_line(original_line)
+        self.assertEqual(new_line, '')
+
+    def test_syntax_error(self):
+        """Checks we get a SyntaxError if the code is not valid."""
+        with mock.patch('massedit.logger', auto_spec=True):
+            with self.assertRaises(SyntaxError):
+                self.editor.append_code_expr("invalid expression")
+                self.assertIsNone(self.editor.code_objs)
+
+    def test_invalid_code_expr2(self):
+        """Checks we get a SyntaxError if the code is missing an argument."""
+        self.editor.append_code_expr("re.sub('def test', 'def toast')")
+        massedit.logger.disabled = True
+        with self.assertRaises(TypeError):
+            self.editor.edit_line('some line')
+        massedit.logger.disabled = False
+
+    @unittest.skip("FIXME. Will revisit this one.")
+    def test_missing_module(self):
+        """Checks that missing module generates an exception."""
+        remove_module('random')
+        self.assertNotIn('random', sys.modules)
+        #random.randint(0,10)  # Fails as it should.
+        self.editor.append_code_expr('random.randint(0,10)')  # works ?!
+        with self.assertRaises(NameError):
+            self.editor.append_code_expr("random.randint(0,10)")  # Houston...
+
+    @unittest.skip("FIXME. remove_module causes problem with os.urandom.")
+    def test_module_import(self):
+        """Checks the module import functinality."""
+        remove_module('random')
+        self.editor.import_module('random')
+        self.editor.append_code_expr('random.randint(0,9)')
+        random_number = self.editor.edit_line('to be replaced')
+        self.assertIn(random_number, [str(x) for x in range(10)])
+
+    def test_file_edit(self):
+        """Simple replacement check."""
+        original_file = zen.split("\n")
+        self.editor.append_function(dutch_is_guido)
+        actual_file = list(self.editor.edit_content(original_file))
+        expected_file = original_file
+        expected_file[15] = "Although that way may not be obvious "\
+                            "at first unless you're Guido."
+        self.maxDiff = None
+        self.assertEqual(actual_file, expected_file)
+
+
+class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
+    """Tests the command line interface of massedit.py."""
+    def setUp(self):
+        """Creates a temporary file to work with."""
+
+        self.text = zen
         self.start_directory = tempfile.mkdtemp()
         self.file_name = os.path.join(self.start_directory, "somefile.txt")
         with open(self.file_name, "w+") as fh:
@@ -220,7 +248,7 @@ Namespaces are one honking great idea -- let's do more of those!
         file_base_name = os.path.basename(self.file_name)
         processed = massedit.edit_files([file_base_name],
                                         ["re.sub('Dutch', 'Guido', line)"],
-                                        start_dir=self.start_directory,
+                                        [], start_dir=self.start_directory,
                                         dry_run=False)
         self.assertEqual(processed, [self.file_name])
         with open(self.file_name, "r") as new_file:
@@ -281,6 +309,40 @@ class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some text"])
 
+class TestCommandLine(unittest.TestCase):
+    def test_parse_expression(self):
+        expr_name = "re.subst('Dutch', 'Guido', line)"
+        argv = ["massedit.py", "--expression", expr_name, "tests.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.expressions, [expr_name])
+
+    def test_parse_function(self):
+        function_name = "tests:dutch_is_guido"
+        argv = ["massedit.py", "--function", function_name, "tests.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.functions, [function_name])
+
+    def test_exception_on_bad_patterns(self):
+        """edit_files raises an error if we pass a string instead of a list."""
+        with self.assertRaises(TypeError):
+            massedit.edit_files('test', [], [])
+
+    def test_file_option(self):
+        def add_header(data):
+            import re
+            yield "header on top\n"
+            for line in data:
+                yield line
+
+        output = io.StringIO()
+        massedit.edit_files(['tests.py'], [], [add_header],
+                            output=output)
+        self.maxDiff = None
+        # third line shows the added header.
+        actual = output.getvalue().split("\n")[3]
+        expected = "+header on top"
+        self.assertEqual(actual, expected)
+         
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
