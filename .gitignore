@@ -10,4 +10,4 @@ sdist/
 tags
 vimfiles/.*
 venv
-Python_Mass_Editor.egg-info
+*.egg-info
