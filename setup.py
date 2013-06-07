@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # vim: set encoding=utf-8
 
 """Packaging script."""
@@ -28,7 +28,6 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Topic :: Software Development",
         "Topic :: Text Editors :: Text Processing",
