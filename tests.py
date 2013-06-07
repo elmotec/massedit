@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python
-# vim: set encoding='utf-8'
+#!/usr/bin/env python
+# coding: utf-8
 
 """Test module to test massedit."""
 

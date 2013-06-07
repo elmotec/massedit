@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python
-# vim: set encoding='utf-8'
+#!/usr/bin/env python
+# coding: utf-8
 
 """A python bulk editor class to apply the same code to many files."""
 
@@ -23,6 +23,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import unicode_literals
+
 
 __version__ = '0.64'  # UPDATE setup.py when changing version.
 __author__ = 'Jérôme Lecomte'
@@ -30,8 +32,6 @@ __license__ = 'MIT'
 
 
 import sys
-if sys.version_info < (3, 2):
-    raise NotImplementedError("massedit requires python 3.2 or later")
 
 import os
 import logging
@@ -44,6 +44,12 @@ import io
 
 
 log = logging.getLogger(__name__)
+
+
+try:
+    unicode
+except NameError:
+    unicode = str
 
 
 def get_function(function_name):
@@ -110,9 +116,9 @@ class Editor(object):
             log.error("cannot process line '{}' with {}".format(line, code))
             raise
         elif isinstance(result, list) or isinstance(result, tuple):
-            line = ' '.join([str(res_element) for res_element in result])
+            line = ' '.join([unicode(res_element) for res_element in result])
         else:
-            line = str(result)
+            line = unicode(result)
         return line
 
     def edit_line(self, line):
@@ -148,7 +154,7 @@ class Editor(object):
           file_name: The name of the file.
           dry_run: only return differences, but do not edit the file.
         """
-        with open(file_name, "r") as from_file:
+        with io.open(file_name, "r", encoding='utf-8') as from_file:
             from_lines = from_file.readlines()
             # unified_diff wants structure of known length. Convert to a list.
             to_lines = list(self.edit_content(from_lines))
@@ -161,7 +167,7 @@ class Editor(object):
                 raise FileExistsError(msg)
             try:
                 os.rename(file_name, bak_file_name)
-                with open(file_name, "w") as new_file:
+                with io.open(file_name, "w", encoding='utf-8') as new_file:
                     new_file.writelines(to_lines)
             except Exception as err:
                 msg = "failed to write output to {}: {}"

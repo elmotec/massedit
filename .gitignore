@@ -5,9 +5,12 @@
 .unison/fp*
 .project
 .pydevproject
+.travis-solo/
+build/
 dist/
 sdist/
 tags
 vimfiles/.*
 venv
 *.egg-info
+*.egg/
