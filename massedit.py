@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+﻿#!/usr/bin/env python
 # vim: set encoding='utf-8'
 
 """A python bulk editor class to apply the same code to many files."""
@@ -29,8 +29,11 @@ __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 
 
-import os
 import sys
+if sys.version_info < (3, 2):
+    raise NotImplementedError("massedit requires python 3.2 or later")
+
+import os
 import logging
 import argparse
 import difflib
@@ -243,11 +246,11 @@ def parse_command_line(argv):
 
     example = textwrap.dedent("""
     Examples:
-    # Simple string substitution. Will show a diff. No changes applied.
+    # Simple string substitution (-e). Will show a diff. No changes applied.
     {0} -e "re.sub('failIf', 'assertFalse', line)" *.py
 
-    # Simple string substitution. Overwrites the files in place.
-    {0} -w -e "re.sub('failIf', 'assertFalse', line)" *.py
+    # File level modifications (-f). Overwrites the files in place (-w).
+    {0} -w -f fixer:main *.py
 
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
