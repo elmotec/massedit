@@ -13,3 +13,4 @@ tags
 vimfiles/.*
 venv
 *.egg-info
+*.egg/
