@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # vim: set encoding='utf-8'
 
 """A python bulk editor class to apply the same code to many files."""
