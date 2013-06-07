@@ -140,6 +140,9 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.65 (????-??-??)
+  Dropped support (if there were any ever) for python 2.X. The unicode handling is too much of a pain (accepting patches though).  Added -f option to execute code in a separate file/module.
+
 0.64 (2013-06-01)
   Fixed setup.py so that massedit installs as a script. Fixed eol issues. Thanks myint.
 
