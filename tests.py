@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python3
 # vim: set encoding='utf-8'
 
 """Test module to test massedit."""
@@ -87,7 +87,7 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
 
     def setUp(self):
         self.editor = massedit.Editor()
-    
+
     def test_no_change(self):
         """Tests the editor does nothing when not told to do anything."""
         input_line = "some info"
@@ -111,7 +111,7 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
 
     def test_syntax_error(self):
         """Checks we get a SyntaxError if the code is not valid."""
-        with mock.patch('massedit.logger', auto_spec=True):
+        with mock.patch('massedit.log', auto_spec=True):
             with self.assertRaises(SyntaxError):
                 self.editor.append_code_expr("invalid expression")
                 self.assertIsNone(self.editor.code_objs)
@@ -119,10 +119,10 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
     def test_invalid_code_expr2(self):
         """Checks we get a SyntaxError if the code is missing an argument."""
         self.editor.append_code_expr("re.sub('def test', 'def toast')")
-        massedit.logger.disabled = True
+        massedit.log.disabled = True
         with self.assertRaises(TypeError):
             self.editor.edit_line('some line')
-        massedit.logger.disabled = False
+        massedit.log.disabled = False
 
     @unittest.skip("FIXME. Will revisit this one.")
     def test_missing_module(self):
@@ -309,6 +309,7 @@ class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some text"])
 
+
 class TestCommandLine(unittest.TestCase):
     def test_parse_expression(self):
         expr_name = "re.subst('Dutch', 'Guido', line)"
@@ -333,16 +334,23 @@ class TestCommandLine(unittest.TestCase):
             yield "header on top\n"
             for line in data:
                 yield line
-
         output = io.StringIO()
-        massedit.edit_files(['tests.py'], [], [add_header],
-                            output=output)
-        self.maxDiff = None
+        massedit.edit_files(['tests.py'], [], [add_header], output=output)
         # third line shows the added header.
         actual = output.getvalue().split("\n")[3]
         expected = "+header on top"
         self.assertEqual(actual, expected)
-         
+
+    def test_bad_function(self):
+        def divide_by_zero(data):
+            1 / 0
+        output = io.StringIO()
+        massedit.log.disabled = True
+        with self.assertRaises(ZeroDivisionError):
+            massedit.edit_files(['tests.py'], [], [divide_by_zero],
+                                output=output)
+        massedit.log.disabled = False
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python3
 # vim: set encoding='utf-8'
 
 """A python bulk editor class to apply the same code to many files."""
@@ -40,12 +40,12 @@ import fnmatch
 import io
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def get_function(function_name):
     """Retrieves the function defined by the function_name.
-   
+
     Arguments:
       function_name: specification of the type module:function_name.
     """
@@ -58,7 +58,7 @@ def get_function(function_name):
         try:
             module = importlib.import_module(module_name)
         except ImportError:
-            logger.error("failed to import {}".format(module_name))
+            log.error("failed to import {}".format(module_name))
             raise
         current = module
     try:
@@ -66,7 +66,7 @@ def get_function(function_name):
             current = getattr(current, level)
     except AttributeError as err:
         msg = "cannot find {} in {}: {}"
-        logger.error(msg.format(level, current.__name__, err))
+        log.error(msg.format(level, current.__name__, err))
         raise
     if not current:
         raise ValueError("cannot find {} in module {}".format(class_name,
@@ -101,10 +101,10 @@ class Editor(object):
             result = eval(code_obj, globals(), locals())
         except TypeError as ex:
             message = "failed to execute {}: {}".format(code, ex)
-            logger.error(message)
+            log.error(message)
             raise
         if result is None:
-            logger.error("cannot process line '{}' with {}".format(line, code))
+            log.error("cannot process line '{}' with {}".format(line, code))
             raise
         elif isinstance(result, list) or isinstance(result, tuple):
             line = ' '.join([str(res_element) for res_element in result])
@@ -130,7 +130,12 @@ class Editor(object):
         """
         lines = [self.edit_line(line) for line in lines]
         for function in self._functions:
-            lines = function(lines)
+            try:
+                lines = function(lines)
+            except Exception as err:
+                msg = "failed to execute code: {}".format(err)
+                log.error(msg)
+                raise  # Let the exception up.
         return lines
 
     def edit_file(self, file_name):
@@ -140,7 +145,7 @@ class Editor(object):
           file_name: The name of the file.
           dry_run: only return differences, but do not edit the file.
         """
-        with open(file_name, "r", encoding='utf-8') as from_file:
+        with open(file_name, "r") as from_file:
             from_lines = from_file.readlines()
             # unified_diff wants structure of known length. Convert to a list.
             to_lines = list(self.edit_content(from_lines))
@@ -155,25 +160,36 @@ class Editor(object):
                 os.rename(file_name, bak_file_name)
                 with open(file_name, "w") as new_file:
                     new_file.writelines(to_lines)
-                os.unlink(bak_file_name)
-            except:
-                os.rename(bak_file_name, file_name)
+            except Exception as err:
+                msg = "failed to write output to {}: {}"
+                log.error(msg.format(file_name, err))
+                # Try to recover...
+                try:
+                    os.rename(bak_file_name, file_name)
+                except Exception as err:
+                    msg = "failed to restore {} from {}: {}"
+                    log.error(msg.format(file_name, bak_file_name, err))
                 raise
+            try:
+                os.unlink(bak_file_name)
+            except Exception as err:
+                msg = "failed to remove backup {}: {}"
+                log.warning(msg.format(bak_file_name, err))
         return list(diffs)
 
     def append_code_expr(self, code):
         """Compiles argument and adds it to the list of code objects."""
         if not isinstance(code, str):  # expects a string.
             raise TypeError("string expected")
-        logger.debug("compiling code {}...".format(code))
+        log.debug("compiling code {}...".format(code))
         try:
             code_obj = compile(code, '<string>', 'eval')
             self.code_objs[code] = code_obj
         except SyntaxError as syntax_err:
-            logger.error("cannot compile {0}: {1}".format(
+            log.error("cannot compile {0}: {1}".format(
                 code, syntax_err))
             raise
-        logger.debug("compiled code {}".format(code))
+        log.debug("compiled code {}".format(code))
 
     def append_function(self, function):
         """Appends the function to the list of functions to be called.
@@ -190,7 +206,7 @@ class Editor(object):
             if not hasattr(function, '__call__'):
                 raise ValueError("function is expected to be callable")
         self._functions.append(function)
-        logger.debug("registered {}".format(function.__name__))
+        log.debug("registered {}".format(function.__name__))
 
     def set_code_exprs(self, codes):
         """Convenience: sets all the code expressions at once."""
@@ -271,16 +287,16 @@ def parse_command_line(argv):
                         type=argparse.FileType('w'), default=sys.stdout,
                         help="redirect output to a file")
     parser.add_argument('patterns', metavar="pattern",
-                        nargs='+', # argparse.REMAINDER,
+                        nargs='+',  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
     # Sets log level to WARN going more verbose for each new -V.
-    logger.setLevel(max(3 - arguments.verbose_count, 0) * 10)
+    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
 
 
-def edit_files(patterns, expressions, functions, # pylint: disable=R0913, R0914
-               start_dir=None, max_depth=1, dry_run=True,
+def edit_files(patterns, expressions,  # pylint: disable=R0913, R0914
+               functions, start_dir=None, max_depth=1, dry_run=True,
                output=sys.stdout):
     """Edits the files that match patterns with python expressions. Each
     expression is run (using eval()) line by line on each input file.
@@ -355,8 +371,10 @@ def command_line(argv):
                        max_depth=arguments.max_depth,
                        dry_run=arguments.dry_run,
                        output=arguments.output)
-    #if isinstance(arguments.output, io.TextIOWrapper):
-        #arguments.output.close()
+    # If the output is not sys.stdout, we need to close it because
+    # argparse.FileType does not do it for us.
+    if isinstance(arguments.output, io.IOBase):
+        arguments.output.close()
     return paths
 
 
