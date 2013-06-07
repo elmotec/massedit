@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# vim: set encoding=utf-8
+# coding: utf-8
 
 """Packaging script."""
 
