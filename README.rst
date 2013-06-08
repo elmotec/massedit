@@ -1,12 +1,18 @@
+========
 massedit 
 ========
 
+------------------------------------
 formerly known as Python Mass Editor
 ------------------------------------
 
 Implements a python mass editor class to process multiple files using Python
 code. The modification(s) is (are) shown on stdout as a diff output. One
 can then modify the target file(s) in place with the -w/--write option.
+
+.. image:: https://travis-ci.org/elmotec/massedit.png?branch=master
+    :target: https://travis-ci.org/elmotec/massedit
+    :alt: Build Status
 
 .. WARNING::
 
@@ -141,7 +147,9 @@ Changes
 -------
 
 0.65 (????-??-??)
-  Dropped support (if there were any ever) for python 2.X. The unicode handling is too much of a pain (accepting patches though).  Added -f option to execute code in a separate file/module.
+  Added -f option to execute code in a separate file/module.
+  Added Travis continuous integration. Thanks myint.
+  Fixed python 2.7 support. Thanks myint.
 
 0.64 (2013-06-01)
   Fixed setup.py so that massedit installs as a script. Fixed eol issues. Thanks myint.
