@@ -52,6 +52,10 @@ expressions).
     -e EXPRESSIONS, --expression EXPRESSIONS
                           Python expressions applied to target files. Use the
                           line variable to reference the current line.
+    -f FUNCTIONS, --function FUNCTIONS
+                          Python function to apply to target file. Takes file
+                          content as input and yield lines. Specify function as
+                          <module>:<function name>.                          
     -s START_DIR, --start START_DIR
                           Directory from which to look for target files.
     -m MAX_DEPTH, --max-depth-level MAX_DEPTH
@@ -60,11 +64,11 @@ expressions).
                           redirect output to a file
   
   Examples:
-  # Simple string substitution. Will show a diff. No changes applied.
+  # Simple string substitution (-e). Will show a diff. No changes applied.
   massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
   
-  # Simple string substitution. Overwrites the files in place.
-  massedit.py -w -e "re.sub('failIf', 'assertFalse', line)" *.py
+  # File level modifications (-f). Overwrites the files in place (-w).
+  massedit.py -w -f fixer:main *.py
   
   # Will change all test*.py in subdirectories of tests.
   massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
@@ -147,12 +151,10 @@ Changes
 -------
 
 0.65 (????-??-??)
-  Added -f option to execute code in a separate file/module.
-  Added Travis continuous integration. Thanks myint.
-  Fixed python 2.7 support. Thanks myint.
+  Added -f option to execute code in a separate file/module. Added Travis continuous integration (thanks myint). Fixed python 2.7 support (thanks myint).
 
 0.64 (2013-06-01)
-  Fixed setup.py so that massedit installs as a script. Fixed eol issues. Thanks myint.
+  Fixed setup.py so that massedit installs as a script. Fixed eol issues (thanks myint).
 
 0.63 (2013-05-27)
   Renamed to massedit. Previous version are still known as Python-Mass-Editor.
