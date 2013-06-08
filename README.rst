@@ -14,6 +14,7 @@ can then modify the target file(s) in place with the -w/--write option.
     :target: https://travis-ci.org/elmotec/massedit
     :alt: Build Status
 
+
 .. WARNING::
 
   This tool is usefull as far as it goes but it does rely on the python 
