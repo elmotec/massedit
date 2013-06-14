@@ -351,6 +351,16 @@ class TestCommandLine(unittest.TestCase):
                                 output=output)
         massedit.log.disabled = False
 
+    def test_exec_option(self):
+        output = io.StringIO()
+        execname = 'head -1'
+        path = next(massedit.get_paths(['tests.py']))
+        diffs = massedit.edit_files(['tests.py'], executables=[execname],
+                                    output=output)
+        actual = output.getvalue().split("\n")
+        self.assertEqual(actual[3], '-#!/usr/bin/env python')
+        self.assertEqual(actual[-1], '+#!/usr/bin/env python+')
+        
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)

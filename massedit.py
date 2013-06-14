@@ -41,6 +41,7 @@ import difflib
 import re  # pylint: disable=W0611
 import fnmatch
 import io
+import subprocess
 
 
 log = logging.getLogger(__name__)
@@ -94,6 +95,7 @@ class Editor(object):
         self.code_objs = dict()
         self._codes = []
         self._functions = []
+        self._executables = []
         self.dry_run = None
         if 'module' in kwds:
             self.import_module(kwds['module'])
@@ -101,6 +103,8 @@ class Editor(object):
             self.append_code_expr(kwds['code'])
         if 'function' in kwds:
             self.append_function(kwds['function'])
+        if 'executable' in kwds:
+            self.append_executable(kwds['executable'])
         if 'dry_run' in kwds:
             self.dry_run = kwds['dry_run']
 
@@ -144,7 +148,7 @@ class Editor(object):
             except Exception as err:
                 msg = "failed to execute code: {}".format(err)
                 log.error(msg)
-                raise  # Let the exception up.
+                raise  # Let the exception be handled at a higher level.
         return lines
 
     def edit_file(self, file_name):
@@ -156,10 +160,30 @@ class Editor(object):
         """
         with io.open(file_name, "r", encoding='utf-8') as from_file:
             from_lines = from_file.readlines()
-            # unified_diff wants structure of known length. Convert to a list.
-            to_lines = list(self.edit_content(from_lines))
-            diffs = difflib.unified_diff(from_lines, to_lines,
-                                         fromfile=file_name, tofile='<new>')
+
+        if self._executables:
+            nbExecutables = len(self._executables)
+            if nbExecutables > 1:
+                log.warn("found {} executables; only the first one is used".
+                         format(nbExecutables))
+            exec_list = self._executables[0].split()
+            exec_list.append(file_name)
+            try:
+                log.info("running {}".format(" ".join(exec_list)))
+                output = subprocess.check_output(exec_list,
+                                                 universal_newlines=True)
+            except Exception as err:
+                msg = "failed to execute {}: {}"
+                log.error(msg.format(" ".join(exec_list), err))
+                raise  # Let the exception be handled at a higher level.
+            to_lines = output.split("\n")
+        else:
+            to_lines = from_lines
+
+        # unified_diff wants structure of known length. Convert to a list.
+        to_lines = list(self.edit_content(to_lines))
+        diffs = difflib.unified_diff(from_lines, to_lines,
+                                     fromfile=file_name, tofile='<new>')
         if not self.dry_run:
             bak_file_name = file_name + ".bak"
             if os.path.exists(bak_file_name):
@@ -217,6 +241,17 @@ class Editor(object):
         self._functions.append(function)
         log.debug("registered {}".format(function.__name__))
 
+    def append_executable(self, executable):
+        """Appends an executable os command to the list to be called.
+
+        Argument:
+          executable: os callable executable.
+        """
+        if not isinstance(executable, str):
+            raise TypeError("expected executable name as str, not {}".
+                            format(executable.__class__.__name__))
+        self._executables.append(executable)
+
     def set_code_exprs(self, codes):
         """Convenience: sets all the code expressions at once."""
         self.code_objs = dict()
@@ -227,6 +262,10 @@ class Editor(object):
     def set_functions(self, functions):
         for function in functions:
             self.append_function(function)
+
+    def set_executables(self, executables):
+        for executable in executables:
+            self.append_executable(executable)
 
     def import_module(self, module):  # pylint: disable=R0201
         """Imports module that are needed for the code expr to compile.
@@ -288,6 +327,8 @@ def parse_command_line(argv):
                         help="Python function to apply to target file. "
                         "Takes file content as input and yield lines. "
                         "Specify function as [module]:?<function name>.")
+    parser.add_argument('-x', "--executable", dest="executables", nargs=1,
+                        help="Python executable to apply to target file.")
     parser.add_argument("-s", "--start", dest="start_dir",
                         help="Directory from which to look for target files.")
     parser.add_argument('-m', "--max-depth-level", type=int, dest="max_depth",
@@ -303,17 +344,45 @@ def parse_command_line(argv):
     log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
 
+def get_paths(patterns, start_dir=None, max_depth=1):
+    """Retrieve files that match any of the patterns."""
 
-def edit_files(patterns, expressions,  # pylint: disable=R0913, R0914
-               functions, start_dir=None, max_depth=1, dry_run=True,
+    # Shortcut: if there is only one pattern, make sure we process just that.
+    if len(patterns) == 1 and not start_dir:
+        pattern = patterns[0]
+        directory = os.path.dirname(pattern)
+        if directory:
+            patterns = [os.path.basename(pattern)]
+            start_dir = directory
+            max_depth = 1
+
+    if not start_dir:
+        start_dir = os.getcwd()
+    for root, dirs, files in os.walk(start_dir):  # pylint: disable=W0612
+        if max_depth is not None:
+            relpath = os.path.relpath(root, start=start_dir)
+            depth = len(relpath.split(os.sep))
+            if depth > max_depth:
+                continue
+        names = []
+        for pattern in patterns:
+            names += fnmatch.filter(files, pattern)
+        for name in names:
+            path = os.path.join(root, name)
+            yield path
+
+
+def edit_files(patterns, expressions=[],  # pylint: disable=R0913, R0914
+               functions=[], executables=[],
+               start_dir=None, max_depth=1, dry_run=True,
                output=sys.stdout):
-    """Edits the files that match patterns with python expressions. Each
-    expression is run (using eval()) line by line on each input file.
+    """Process patterns with Editor.
 
     Arguments:
       patterns: file pattern to identify the files to be processed.
       expressions: single python expression to be applied line by line.
       functions: functions to process files contents.
+      executables: os executables to execute on the argument files.
 
     Keyword arguments:
       max_depth: maximum recursion level when looking for file matches.
@@ -328,42 +397,26 @@ def edit_files(patterns, expressions,  # pylint: disable=R0913, R0914
     if not iter(patterns) or isinstance(patterns, str):
         raise TypeError("patterns should be a list")
     if expressions and (not iter(expressions) or isinstance(expressions, str)):
-        raise TypeError("expressions should be a list")
+        raise TypeError("expressions should be a list of exec expressions")
     if functions and (not iter(functions) or isinstance(functions, str)):
-        raise TypeError("functions should be a list")
+        raise TypeError("functions should be a list of functions")
+    if executables and (not iter(executables) or isinstance(executables, str)):
+        raise TypeError("executables should be a list of program names")
 
-    # Shortcut: if there is only one pattern, make sure we process just that.
-    if len(patterns) == 1 and not start_dir:
-        pattern = patterns[0]
-        directory = os.path.dirname(pattern)
-        if directory:
-            patterns = [os.path.basename(pattern)]
-            start_dir = directory
-            max_depth = 1
-
-    processed_paths = []
     editor = Editor(dry_run=dry_run)
     if expressions:
         editor.set_code_exprs(expressions)
     if functions:
         editor.set_functions(functions)
-    if not start_dir:
-        start_dir = os.getcwd()
-    for root, dirs, files in os.walk(start_dir):  # pylint: disable=W0612
-        if max_depth is not None:
-            relpath = os.path.relpath(root, start=start_dir)
-            depth = len(relpath.split(os.sep))
-            if depth > max_depth:
-                continue
-        names = []
-        for pattern in patterns:
-            names += fnmatch.filter(files, pattern)
-        for name in names:
-            path = os.path.join(root, name)
-            processed_paths.append(os.path.abspath(path))
-            diffs = list(editor.edit_file(path))
-            if dry_run:
-                output.write("".join(diffs))
+    if executables:
+        editor.set_executables(executables)
+
+    processed_paths = []
+    for path in get_paths(patterns, start_dir=start_dir, max_depth=max_depth):
+        diffs = list(editor.edit_file(path))
+        if dry_run:
+            output.write("".join(diffs))
+        processed_paths.append(os.path.abspath(path))
     return processed_paths
 
 
@@ -374,8 +427,10 @@ def command_line(argv):
       processed_paths: paths processed are appended to the list.
     """
     arguments = parse_command_line(argv)
-    paths = edit_files(arguments.patterns, arguments.expressions,
-                       arguments.functions,
+    paths = edit_files(arguments.patterns,
+                       expressions=arguments.expressions,
+                       functions=arguments.functions,
+                       executables=arguments.executables,
                        start_dir=arguments.start_dir,
                        max_depth=arguments.max_depth,
                        dry_run=arguments.dry_run,
