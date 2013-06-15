@@ -61,6 +61,45 @@ Namespaces are one honking great idea -- let's do more of those!
 """
 
 
+class LogInterceptor:
+    """Replaces all log handlers and redirect log to the stream."""
+    def __init__(self, logger):
+        """Sets up log handler for logger and remove all existing handlers.
+       
+        Arguments:
+            logger (logging.Logger): logger to be modified.
+
+        Sets up variables:
+            self.__content (io.StringIO): stores the log.
+            self.handler (logging.StreamHandler): handler for self.__content.
+            self.logger (logging.Logger): the logger to intercept.
+        """
+        # Stores original values.
+        self.__handlers = []
+        self.__propagate = logger.propagate
+        self.__content = io.StringIO()
+        self.logger = logger
+        self.logger.propagate = False
+        self.handler = logging.StreamHandler(self.__content)
+        for h in logger.handlers:
+            self.__handlers.append(h)
+            logger.removeHandler(h)
+        logger.addHandler(self.handler)
+
+    @property
+    def log(self):
+        """Flushes the handler and return the content of self.__content."""
+        self.handler.flush()
+        return self.__content.getvalue()
+
+    def __del__(self):
+        """Reset the handlers the way they were."""
+        self.logger.removeHandler(self.handler)
+        for h in self.__handlers:
+            self.logger.addHandler(h)
+        self.logger.propagate = self.__propagate
+
+
 def dutch_is_guido(lines):
     """Helper function that substitute Dutch with Guido."""
     import re
@@ -82,11 +121,11 @@ class TestGetFunction(unittest.TestCase):
         self.assertEqual(remove_module.__code__, function.__code__)
 
 
-class TestEditor(unittest.TestCase):  # pylint: disable=R0904
+class TestProgram(unittest.TestCase):  # pylint: disable=R0904
     """Tests the massedit module."""
 
     def setUp(self):
-        self.editor = massedit.Editor()
+        self.editor = massedit.Program()
 
     def test_no_change(self):
         """Tests the editor does nothing when not told to do anything."""
@@ -155,7 +194,7 @@ class TestEditor(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(actual_file, expected_file)
 
 
-class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
+class TestProgramWithFile(unittest.TestCase):  # pylint: disable=R0904
     """Tests the command line interface of massedit.py."""
     def setUp(self):
         """Creates a temporary file to work with."""
@@ -177,7 +216,7 @@ class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
 
     def test_replace_in_file(self):
         """Checks editing of an entire file."""
-        editor = massedit.Editor()
+        editor = massedit.Program()
         editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
         diffs = editor.edit_file(self.file_name)
         self.assertEqual(len(diffs), 11)
@@ -267,7 +306,7 @@ class TestEditorWithFile(unittest.TestCase):  # pylint: disable=R0904
                 self.assertEqual(new_lines[line - 1], expected_line_16)
 
 
-class TestEditorWalk(unittest.TestCase):  # pylint: disable=R0904
+class TestProgramWalk(unittest.TestCase):  # pylint: disable=R0904
     """Tests recursion when processing files."""
 
     def setUp(self):
@@ -341,7 +380,21 @@ class TestCommandLine(unittest.TestCase):
         expected = "+header on top"
         self.assertEqual(actual, expected)
 
+    def test_bad_module(self):
+        log_sink = LogInterceptor(massedit.log)
+        with self.assertRaises(ImportError):
+            massedit.edit_files(['tests.py'], functions=['bong:modify'])
+        self.assertEqual(log_sink.log, 'failed to import bong\n')
+
     def test_bad_function(self):
+        log_sink = LogInterceptor(massedit.log)
+        expected = "cannot find bong in massedit: "\
+                   "'module' object has no attribute 'bong'\n"
+        with self.assertRaises(AttributeError):
+            massedit.edit_files(['tests.py'], functions=['massedit:bong'])
+        self.assertEqual(log_sink.log, expected)
+
+    def test_error_in_function(self):
         def divide_by_zero(data):
             1 / 0
         output = io.StringIO()

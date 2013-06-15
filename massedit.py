@@ -84,7 +84,7 @@ def get_function(function_name):
     return current
 
 
-class Editor(object):
+class Program(object):
     """Processes input file or input line.
 
     Named arguments:
@@ -376,7 +376,7 @@ def edit_files(patterns, expressions=[],  # pylint: disable=R0913, R0914
                functions=[], executables=[],
                start_dir=None, max_depth=1, dry_run=True,
                output=sys.stdout):
-    """Process patterns with Editor.
+    """Process patterns with Program.
 
     Arguments:
       patterns: file pattern to identify the files to be processed.
@@ -403,7 +403,7 @@ def edit_files(patterns, expressions=[],  # pylint: disable=R0913, R0914
     if executables and (not iter(executables) or isinstance(executables, str)):
         raise TypeError("executables should be a list of program names")
 
-    editor = Editor(dry_run=dry_run)
+    editor = Program(dry_run=dry_run)
     if expressions:
         editor.set_code_exprs(expressions)
     if functions:
