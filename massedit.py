@@ -31,9 +31,9 @@ __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 
 
-import sys
-
 import os
+import shutil
+import sys
 import logging
 import argparse
 import difflib
@@ -193,6 +193,7 @@ class MassEdit(object):
                 os.rename(file_name, bak_file_name)
                 with io.open(file_name, "w", encoding='utf-8') as new_file:
                     new_file.writelines(to_lines)
+                shutil.copymode(bak_file_name, file_name)
             except Exception as err:
                 msg = "failed to write output to {}: {}"
                 log.error(msg.format(file_name, err))
