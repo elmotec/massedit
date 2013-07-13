@@ -121,11 +121,11 @@ class TestGetFunction(unittest.TestCase):
         self.assertEqual(remove_module.__code__, function.__code__)
 
 
-class TestProgram(unittest.TestCase):  # pylint: disable=R0904
+class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
     """Tests the massedit module."""
 
     def setUp(self):
-        self.editor = massedit.Program()
+        self.editor = massedit.MassEdit()
 
     def test_no_change(self):
         """Tests the editor does nothing when not told to do anything."""
@@ -194,7 +194,7 @@ class TestProgram(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(actual_file, expected_file)
 
 
-class TestProgramWithFile(unittest.TestCase):  # pylint: disable=R0904
+class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
     """Tests the command line interface of massedit.py."""
     def setUp(self):
         """Creates a temporary file to work with."""
@@ -216,7 +216,7 @@ class TestProgramWithFile(unittest.TestCase):  # pylint: disable=R0904
 
     def test_replace_in_file(self):
         """Checks editing of an entire file."""
-        editor = massedit.Program()
+        editor = massedit.MassEdit()
         editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
         diffs = editor.edit_file(self.file_name)
         self.assertEqual(len(diffs), 11)
@@ -306,7 +306,7 @@ class TestProgramWithFile(unittest.TestCase):  # pylint: disable=R0904
                 self.assertEqual(new_lines[line - 1], expected_line_16)
 
 
-class TestProgramWalk(unittest.TestCase):  # pylint: disable=R0904
+class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
     """Tests recursion when processing files."""
 
     def setUp(self):
