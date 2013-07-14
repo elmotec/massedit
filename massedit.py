@@ -26,7 +26,7 @@
 from __future__ import unicode_literals
 
 
-__version__ = '0.65'  # UPDATE setup.py when changing version.
+__version__ = '0.66'  # UPDATE setup.py when changing version.
 __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 

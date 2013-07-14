@@ -151,6 +151,9 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.66 (2013-07-14)
+  Fixed lost executable bit with -f option (thanks myint).
+
 0.65 (2013-07-12)
   Added -f option to execute code in a separate file/module. Added Travis continuous integration (thanks myint). Fixed python 2.7 support (thanks myint).
 
