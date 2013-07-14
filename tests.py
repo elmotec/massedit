@@ -305,6 +305,23 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
                     "at first unless you're Guido.\n"
                 self.assertEqual(new_lines[line - 1], expected_line_16)
 
+    def test_preserve_permissions(self):
+        """Tests that the exec bit is preserved when processing file."""
+        import stat
+        def is_executable(file_name):
+            return stat.S_IXUSR & os.stat(file_name)[stat.ST_MODE] > 0
+        self.assertFalse(is_executable(self.file_name)) 
+        mode = os.stat(self.file_name)[stat.ST_MODE] | stat.S_IEXEC
+        os.chmod(self.file_name, mode)
+        self.assertTrue(is_executable(self.file_name)) 
+        file_base_name = os.path.basename(self.file_name)
+        massedit.command_line(["massedit.py", "-w", "-e",
+                               "re.sub('Dutch', 'Guido', line)",
+                               "-w", "-s", self.start_directory,
+                               file_base_name])
+        statinfo = os.stat(self.file_name)
+        self.assertEqual(statinfo.st_mode, mode)
+
 
 class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
     """Tests recursion when processing files."""
