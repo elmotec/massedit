@@ -53,13 +53,13 @@ except NameError:
     unicode = str
 
 
-def get_function(function_name):
+def get_function(fn_name):
     """Retrieves the function defined by the function_name.
 
     Arguments:
-      function_name: specification of the type module:function_name.
+      fn_name: specification of the type module:function_name.
     """
-    module_name, callable_name = function_name.split(':')
+    module_name, callable_name = fn_name.split(':')
     current = globals()
     if not callable_name:
         callable_name = module_name
@@ -71,16 +71,8 @@ def get_function(function_name):
             log.error("failed to import {}".format(module_name))
             raise
         current = module
-    try:
-        for level in callable_name.split('.'):
-            current = getattr(current, level)
-    except AttributeError as err:
-        msg = "cannot find {} in {}: {}"
-        log.error(msg.format(level, current.__name__, err))
-        raise
-    if not current:
-        raise ValueError("cannot find {} in module {}".format(class_name,
-                                                              module.__name__))
+    for level in callable_name.split('.'):
+        current = getattr(current, level)
     return current
 
 
@@ -262,12 +254,17 @@ class MassEdit(object):
             self.append_code_expr(code)
 
     def set_functions(self, functions):
-        for function in functions:
-            self.append_function(function)
+        for fn in functions:
+            try:
+                self.append_function(fn)
+            except (ValueError, AttributeError) as ex:
+                msg = "'{}' is not a callable function: {}"
+                log.error(msg.format(fn, ex))
+                raise
 
     def set_executables(self, executables):
-        for executable in executables:
-            self.append_executable(executable)
+        for exc in executables:
+            self.append_executable(exc)
 
     def import_module(self, module):  # pylint: disable=R0201
         """Imports module that are needed for the code expr to compile.

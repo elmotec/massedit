@@ -405,14 +405,31 @@ class TestCommandLine(unittest.TestCase):
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(ImportError):
             massedit.edit_files(['tests.py'], functions=['bong:modify'])
-        self.assertEqual(log_sink.log, 'failed to import bong\n')
+        expected = "failed to import bong\n"
+        self.assertEqual(log_sink.log, expected)
+
+    def test_empty_function(self):
+        log_sink = LogInterceptor(massedit.log)
+        with self.assertRaises(AttributeError):
+            massedit.edit_files(['tests.py'], functions=[':'])
+        expected = "':' is not a callable function: " + \
+                   "'dict' object has no attribute ''\n"
+        self.assertEqual(log_sink.log, expected)
 
     def test_bad_function(self):
         log_sink = LogInterceptor(massedit.log)
-        expected = "cannot find bong in massedit: "\
-                   "'module' object has no attribute 'bong'\n"
         with self.assertRaises(AttributeError):
             massedit.edit_files(['tests.py'], functions=['massedit:bong'])
+        expected = "'massedit:bong' is not a callable function: " + \
+                   "'module' object has no attribute 'bong'\n" 
+        self.assertEqual(log_sink.log, expected)
+
+    def test_bad_function2(self):
+        log_sink = LogInterceptor(massedit.log)
+        with self.assertRaises(AttributeError):
+            massedit.edit_files(['tests.py'], functions=['massedit:'])
+        expected = "'massedit:' is not a callable function: " + \
+                   "'dict' object has no attribute 'massedit'\n"
         self.assertEqual(log_sink.log, expected)
 
     def test_error_in_function(self):
