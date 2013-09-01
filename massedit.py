@@ -50,7 +50,7 @@ log = logging.getLogger(__name__)
 try:
     unicode
 except NameError:
-    unicode = str
+    unicode = str  # pylint: disable=C0103
 
 
 def get_function(fn_name):
@@ -154,10 +154,10 @@ class MassEdit(object):
             from_lines = from_file.readlines()
 
         if self._executables:
-            nbExecutables = len(self._executables)
-            if nbExecutables > 1:
+            nb_execs = len(self._executables)
+            if nb_execs > 1:
                 log.warn("found {} executables; only the first one is used".
-                         format(nbExecutables))
+                         format(nb_execs))
             exec_list = self._executables[0].split()
             exec_list.append(file_name)
             try:
@@ -180,7 +180,10 @@ class MassEdit(object):
             bak_file_name = file_name + ".bak"
             if os.path.exists(bak_file_name):
                 msg = "{} already exists".format(bak_file_name)
-                raise FileExistsError(msg)
+                if sys.version_info < (3, 3):
+                    raise OSError(msg)
+                else:
+                    raise FileExistsError(msg)
             try:
                 os.rename(file_name, bak_file_name)
                 with io.open(file_name, "w", encoding='utf-8') as new_file:
@@ -193,13 +196,13 @@ class MassEdit(object):
                 # Try to recover...
                 try:
                     os.rename(bak_file_name, file_name)
-                except Exception as err:
+                except Exception as err:  # pylint: disable=W0703
                     msg = "failed to restore {} from {}: {}"
                     log.error(msg.format(file_name, bak_file_name, err))
                 raise
             try:
                 os.unlink(bak_file_name)
-            except Exception as err:
+            except Exception as err:  # pylint: disable=W0703
                 msg = "failed to remove backup {}: {}"
                 log.warning(msg.format(bak_file_name, err))
         return list(diffs)
@@ -254,15 +257,17 @@ class MassEdit(object):
             self.append_code_expr(code)
 
     def set_functions(self, functions):
-        for fn in functions:
+        """Convenience: sets all functions to be called."""
+        for func in functions:
             try:
-                self.append_function(fn)
+                self.append_function(func)
             except (ValueError, AttributeError) as ex:
                 msg = "'{}' is not a callable function: {}"
-                log.error(msg.format(fn, ex))
+                log.error(msg.format(func, ex))
                 raise
 
-    def set_executables(self, executables):
+    def set_executables(self, executables):  # pylint: disable=W0613
+        """Convenience: sets all the executables to be called."""
         for exc in executables:
             self.append_executable(exc)
 
@@ -442,6 +447,7 @@ def command_line(argv):
 
 
 def main():
+    """Main program."""
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     try:
         command_line(sys.argv)

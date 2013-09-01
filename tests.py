@@ -66,7 +66,7 @@ class LogInterceptor:
     """Replaces all log handlers and redirect log to the stream."""
     def __init__(self, logger):
         """Sets up log handler for logger and remove all existing handlers.
-       
+
         Arguments:
             logger (logging.Logger): logger to be modified.
 
@@ -82,9 +82,9 @@ class LogInterceptor:
         self.logger = logger
         self.logger.propagate = False
         self.handler = logging.StreamHandler(self.__content)
-        for h in logger.handlers:
-            self.__handlers.append(h)
-            logger.removeHandler(h)
+        for handler in logger.handlers:
+            self.__handlers.append(handler)
+            logger.removeHandler(handler)
         logger.addHandler(self.handler)
 
     @property
@@ -96,8 +96,8 @@ class LogInterceptor:
     def __del__(self):
         """Reset the handlers the way they were."""
         self.logger.removeHandler(self.handler)
-        for h in self.__handlers:
-            self.logger.addHandler(h)
+        for handler in self.__handlers:
+            self.logger.addHandler(handler )
         self.logger.propagate = self.__propagate
 
 
@@ -114,9 +114,10 @@ def remove_module(module_name):
         del(sys.modules[module_name])
 
 
-class TestGetFunction(unittest.TestCase):
+class TestGetFunction(unittest.TestCase):  # pylint: disable=R0904
     """Tests the functon get_function."""
     def test_simple_retrieval(self):
+        """Retrieves remove_module in the tests module."""
         function = massedit.get_function('tests:remove_module')
         # Functions are not the same but the code is.
         self.assertEqual(remove_module.__code__, function.__code__)
@@ -191,7 +192,6 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
         expected_file = original_file
         expected_file[15] = "Although that way may not be obvious "\
                             "at first unless you're Guido."
-        self.maxDiff = None
         self.assertEqual(actual_file, expected_file)
 
 
@@ -217,17 +217,34 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
 
     def test_replace_in_file(self):
         """Checks editing of an entire file."""
+        import textwrap
         editor = massedit.MassEdit()
         editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
         diffs = editor.edit_file(self.file_name)
         self.assertEqual(len(diffs), 11)
-        expected_first_diff = """\
- There should be one-- and preferably only one --obvious way to do it.
--Although that way may not be obvious at first unless you're Dutch.
-+Although that way may not be obvious at first unless you're Guido.
- Now is better than never.
-"""
-        self.assertEqual("".join(diffs[5:9]), expected_first_diff)
+        expected_diffs = textwrap.dedent("""
+         There should be one-- and preferably only one --obvious way to do it.
+        -Although that way may not be obvious at first unless you're Dutch.
+        +Although that way may not be obvious at first unless you're Guido.
+         Now is better than never.\n""")
+        self.assertEqual("".join(diffs[5:9]), "".join(expected_diffs[1:]))
+
+    def test_replace_cannot_backup(self):
+        """Checks replacement fails if backup fails."""
+        import shutil
+        editor = massedit.MassEdit()
+        editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
+        backup = self.file_name + ".bak"
+        try:
+            shutil.copy(self.file_name, backup)
+            if sys.version_info < (3, 3):
+                error = OSError
+            else:
+                error = FileExistsError
+            with self.assertRaises(error):
+                editor.edit_file(self.file_name)
+        finally:
+            os.unlink(backup)
 
     def test_command_line_replace(self):
         """Checks simple replacement via command line."""
@@ -312,12 +329,13 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
         """Tests that the exec bit is preserved when processing file."""
         import stat
         def is_executable(file_name):
+            """Checks if the file has the exec bit set."""
             return stat.S_IXUSR & os.stat(file_name)[stat.ST_MODE] > 0
-        self.assertFalse(is_executable(self.file_name)) 
+        self.assertFalse(is_executable(self.file_name))
         mode = os.stat(self.file_name)[stat.ST_MODE] | stat.S_IEXEC
         # Windows supports READ and WRITE, but not EXEC bit.
-        os.chmod(self.file_name, mode) 
-        self.assertTrue(is_executable(self.file_name)) 
+        os.chmod(self.file_name, mode)
+        self.assertTrue(is_executable(self.file_name))
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
@@ -370,27 +388,31 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(new_lines, ["some text"])
 
 
-class TestCommandLine(unittest.TestCase):
+class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
+    """Tests handing of command line arguments."""
     def test_parse_expression(self):
+        """Simple test to show expression is handled by parser."""
         expr_name = "re.subst('Dutch', 'Guido', line)"
         argv = ["massedit.py", "--expression", expr_name, "tests.py"]
         arguments = massedit.parse_command_line(argv)
         self.assertEqual(arguments.expressions, [expr_name])
 
     def test_parse_function(self):
+        """Simple test to show function is handled by parser."""
         function_name = "tests:dutch_is_guido"
         argv = ["massedit.py", "--function", function_name, "tests.py"]
         arguments = massedit.parse_command_line(argv)
         self.assertEqual(arguments.functions, [function_name])
 
     def test_exception_on_bad_patterns(self):
-        """edit_files raises an error if we pass a string instead of a list."""
+        """edit_files raises an error string instead of a list."""
         with self.assertRaises(TypeError):
             massedit.edit_files('test', [], [])
 
     def test_file_option(self):
+        """Checks processing with function."""
         def add_header(data):
-            import re
+            """Adds header at the begining of the data."""
             yield "header on top\n"
             for line in data:
                 yield line
@@ -402,6 +424,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_bad_module(self):
+        """Checks error when the function module is not found."""
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(ImportError):
             massedit.edit_files(['tests.py'], functions=['bong:modify'])
@@ -409,6 +432,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(log_sink.log, expected)
 
     def test_empty_function(self):
+        """Checks error when function and module are empty."""
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(AttributeError):
             massedit.edit_files(['tests.py'], functions=[':'])
@@ -417,14 +441,16 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(log_sink.log, expected)
 
     def test_bad_function(self):
+        """Checks error when the function name is not valid."""
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(AttributeError):
             massedit.edit_files(['tests.py'], functions=['massedit:bong'])
         expected = "'massedit:bong' is not a callable function: " + \
-                   "'module' object has no attribute 'bong'\n" 
+                   "'module' object has no attribute 'bong'\n"
         self.assertEqual(log_sink.log, expected)
 
     def test_bad_function2(self):
+        """Checks error when the function is empty but not the module."""
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(AttributeError):
             massedit.edit_files(['tests.py'], functions=['massedit:'])
@@ -433,8 +459,10 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(log_sink.log, expected)
 
     def test_error_in_function(self):
-        def divide_by_zero(data):
-            1 / 0
+        """Checks error when the function triggers an exception."""
+        def divide_by_zero(unused):  # pylint: disable=W0613
+            """Simulates division by zero."""
+            raise ZeroDivisionError()
         output = io.StringIO()
         massedit.log.disabled = True
         with self.assertRaises(ZeroDivisionError):
@@ -443,15 +471,16 @@ class TestCommandLine(unittest.TestCase):
         massedit.log.disabled = False
 
     def test_exec_option(self):
+        """Checks trivial call using executable."""
         output = io.StringIO()
         execname = 'head -1'
-        path = next(massedit.get_paths(['tests.py']))
-        diffs = massedit.edit_files(['tests.py'], executables=[execname],
-                                    output=output)
+        next(massedit.get_paths(['tests.py']))
+        massedit.edit_files(['tests.py'], executables=[execname],
+                            output=output)
         actual = output.getvalue().split("\n")
         self.assertEqual(actual[3], '-#!/usr/bin/env python')
         self.assertEqual(actual[-1], '+#!/usr/bin/env python+')
-        
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
