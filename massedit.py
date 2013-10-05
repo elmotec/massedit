@@ -359,7 +359,6 @@ def parse_command_line(argv):
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
 
-
     if not (arguments.expressions or
             arguments.functions or
             arguments.executables):
