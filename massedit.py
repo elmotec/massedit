@@ -358,6 +358,14 @@ def parse_command_line(argv):
                         nargs='+',  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
+
+
+    if not (arguments.expressions or
+            arguments.functions or
+            arguments.executables):
+        parser.error(
+            '--expression, --function, or --executable must be specified')
+
     # Sets log level to WARN going more verbose for each new -V.
     log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
