@@ -54,10 +54,11 @@ except NameError:
 
 
 def get_function(fn_name):
-    """Retrieves the function defined by the function_name.
+    """Retrieve the function defined by the function_name.
 
     Arguments:
       fn_name: specification of the type module:function_name.
+
     """
     module_name, callable_name = fn_name.split(':')
     current = globals()
@@ -80,13 +81,20 @@ def get_function(fn_name):
 
 
 class MassEdit(object):
-    """Processes input file or input line.
 
-    Named arguments:
-      code: code expression to process the input with.
-    """
+    """Mass edit lines of files."""
 
     def __init__(self, **kwds):
+        """Initialize MassEdit object.
+
+        Args:
+          - code (byte code object): code to execute on input file.
+          - function (str or callable): function to call on input file.
+          - module (str): module name where to find the function.
+          - executable (str): executable file name to execute on input file.
+          - dry_run (bool): skip actual modification of input file if True.
+
+        """
         self.code_objs = dict()
         self._codes = []
         self._functions = []
@@ -122,7 +130,7 @@ class MassEdit(object):
         return line
 
     def edit_line(self, line):
-        """Edits a single line using the code expression."""
+        """Edit a single line using the code expression."""
         for code, code_obj in self.code_objs.items():
             line = self.__edit_line(line, code, code_obj)
         return line
@@ -131,11 +139,12 @@ class MassEdit(object):
         """Processes a file contents.
 
         First processes the contents line by line applying the registered
-        expressions, then process the resulting contents using the registered
-        functions.
+        expressions, then process the resulting contents using the
+        registered functions.
 
         Arguments:
-          lines: file content.
+          lines (list): file content.
+
         """
         lines = [self.edit_line(line) for line in lines]
         for function in self._functions:
@@ -153,6 +162,7 @@ class MassEdit(object):
         Arguments:
           file_name: The name of the file.
           dry_run: only return differences, but do not edit the file.
+
         """
         with io.open(file_name, "r", encoding='utf-8') as from_file:
             from_lines = from_file.readlines()
@@ -182,7 +192,10 @@ class MassEdit(object):
             bak_file_name = file_name + ".bak"
             if os.path.exists(bak_file_name):
                 msg = "{} already exists".format(bak_file_name)
-                raise FileExistsError(msg)
+                if sys.version_info < (3, 3):
+                    raise OSError(msg)
+                else:
+                    raise FileExistsError(msg)
             try:
                 os.rename(file_name, bak_file_name)
                 with io.open(file_name, "w", encoding='utf-8') as new_file:
@@ -206,7 +219,7 @@ class MassEdit(object):
         return list(diffs)
 
     def append_code_expr(self, code):
-        """Compiles argument and adds it to the list of code objects."""
+        """Compile argument and adds it to the list of code objects."""
         if not isinstance(code, str):  # expects a string.
             raise TypeError("string expected")
         log.debug("compiling code %s...", code)
@@ -219,14 +232,15 @@ class MassEdit(object):
         log.debug("compiled code %s", code)
 
     def append_function(self, function):
-        """Appends the function to the list of functions to be called.
+        """Append the function to the list of functions to be called.
 
         If the function is already a callable, use it. If it's a type str
         try to interpret it as [module]:?<callable>, load the module
         if there is one and retrieve the callable.
 
         Argument:
-          function: a callable or the name of a callable.
+          function (str or callable): function to call on input.
+
         """
         if not hasattr(function, '__call__'):
             function = get_function(function)
@@ -236,10 +250,11 @@ class MassEdit(object):
         log.debug("registered %s", function.__name__)
 
     def append_executable(self, executable):
-        """Appends an executable os command to the list to be called.
+        """Append san executable os command to the list to be called.
 
         Argument:
-          executable: os callable executable.
+          executable (str): os callable executable.
+
         """
         if not isinstance(executable, str):
             raise TypeError("expected executable name as str, not {}".
@@ -268,10 +283,11 @@ class MassEdit(object):
             self.append_executable(exc)
 
     def import_module(self, module):  # pylint: disable=R0201
-        """Imports module that are needed for the code expr to compile.
+        """Import module that are needed for the code expr to compile.
 
         Argument:
-          module: can be scalar string or a list of strings.
+          module (str or list): module(s) to import.
+
         """
         if isinstance(module, list):
             all_modules = module
@@ -282,10 +298,11 @@ class MassEdit(object):
 
 
 def parse_command_line(argv):
-    """Parses command line argument. See -h option
+    """Parse command line argument. See -h option.
 
     Arguments:
       argv: arguments on the command line must include caller file name.
+
     """
     import textwrap
 
@@ -334,7 +351,14 @@ def parse_command_line(argv):
                         nargs='+',  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
-    # Sets log level to WARN going more verbose for each new --verbose.
+
+    if not (arguments.expressions or
+            arguments.functions or
+            arguments.executables):
+        parser.error(
+            '--expression, --function, or --executable must be specified')
+
+    # Sets log level to WARN going more verbose for each new -V.
     log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
 
@@ -386,8 +410,9 @@ def edit_files(patterns, expressions=None,
       dry_run: only display differences if True. Save modified file otherwise.
       output: handle where the output should be redirected.
 
-    Returns:
+    Return:
       list of files processed.
+
     """
     # Makes for a better diagnostic because str are also iterable.
     if not iter(patterns) or isinstance(patterns, str):
@@ -421,7 +446,8 @@ def command_line(argv):
     """Instantiate an editor and process arguments.
 
     Optional argument:
-      processed_paths: paths processed are appended to the list.
+      - processed_paths: paths processed are appended to the list.
+
     """
     arguments = parse_command_line(argv)
     paths = edit_files(arguments.patterns,
