@@ -7,7 +7,7 @@ import os
 from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.rst')).read()
+readme = open(os.path.join(here, 'README.rst')).read()
 
 setup(
     name="massedit",
@@ -20,18 +20,22 @@ setup(
     url="http://github.com/elmotec/massedit",
     py_modules=['massedit'],
     entry_points={'console_scripts': ['massedit=massedit:main']},
-    long_description=README,
+    long_description=readme,
     test_suite='tests',
     setup_requires=[],
     tests_require=['mock'],
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3",
-        "Topic :: Software Development",
-        "Topic :: Text Editors :: Text Processing",
-        "Topic :: Utilities",
-        "Intended Audience :: Developers",
-    ],
+    classifiers=["Development Status :: 5 - Production/Stable",
+                 "License :: OSI Approved :: MIT License",
+                 "Environment :: Console",
+                 "Natural Language :: English",
+                 "Programming Language :: Python :: 2.7",
+                 "Programming Language :: Python :: 3.3",
+                 "Programming Language :: Python :: 3.4",
+                 "Topic :: Software Development",
+                 "Topic :: Software Development :: Code Generators",
+                 "Topic :: Text Editors :: Text Processing",
+                 "Topic :: Text Processing :: Filters",
+                 "Topic :: Utilities",
+                 "Intended Audience :: Developers",
+                ],
 )
