@@ -62,20 +62,11 @@ Namespaces are one honking great idea -- let's do more of those!
 """
 
 
-<<<<<<< HEAD
 class LogInterceptor:  # pylint: disable=too-few-public-methods
-=======
-class LogInterceptor:
-
->>>>>>> f1c51118052cc57a35499b99870eacff2ae99687
     """Replaces all log handlers and redirect log to the stream."""
 
     def __init__(self, logger):
-<<<<<<< HEAD
         """Sets up log handler for logger and remove all existing handlers.
-=======
-        """Set up log handler for logger and remove all existing handlers.
->>>>>>> f1c51118052cc57a35499b99870eacff2ae99687
 
         Arguments:
           logger (logging.Logger): logger to be modified.
@@ -93,15 +84,9 @@ class LogInterceptor:
         self.logger = logger
         self.logger.propagate = False
         self.handler = logging.StreamHandler(self.__content)
-<<<<<<< HEAD
-        for hdlr in logger.handlers:
-            self.__handlers.append(hdlr)
-            logger.removeHandler(hdlr)
-=======
         for handler in logger.handlers:
             self.__handlers.append(handler)
             logger.removeHandler(handler)
->>>>>>> f1c51118052cc57a35499b99870eacff2ae99687
         logger.addHandler(self.handler)
 
     @property
