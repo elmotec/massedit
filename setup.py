@@ -11,7 +11,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 
 setup(
     name="massedit",
-    version="0.66",
+    version="0.67",
     author="Jérôme Lecomte",
     author_email="jlecomte1972@yahoo.com",
     description='Edit multiple files using Python text processing modules',
