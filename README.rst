@@ -7,18 +7,18 @@
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
     :target: https://pypi.python.org/pypi/massedit
-    
+
 ========
 massedit
 ========
 
-------------------------------------
-formerly known as Python Mass Editor
-------------------------------------
+*formerly known as Python Mass Editor*
 
-Implements a python mass editor class to process multiple files using Python
+Implements a python mass editor to process text files using Python
 code. The modification(s) is (are) shown on stdout as a diff output. One
 can then modify the target file(s) in place with the -w/--write option.
+This is very similar to 2to3 tool that ships with Python 3.
+
 
 +--------------------------------------------------------------------------+
 | **WARNING**: A word of caution about the usage of ``eval()``             |
