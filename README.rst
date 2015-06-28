@@ -7,6 +7,11 @@
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
     :target: https://pypi.python.org/pypi/massedit
+    
+.. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg 
+    :target: https://coveralls.io/r/elmotec/massedit 
+    :alt: Coverage
+    
 
 ========
 massedit
