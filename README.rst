@@ -1,3 +1,13 @@
+.. image:: https://img.shields.io/pypi/v/massedit.svg
+
+.. image:: https://img.shields.io/travis/elmotec/massedit.svg
+    :target: https://travis-ci.org/elmotec/massedit
+    :alt: Build Status
+
+.. image:: https://img.shields.io/pypi/dm/massedit.svg
+    :alt: PyPi
+    :target: https://pypi.python.org/pypi/massedit
+    
 ========
 massedit
 ========
@@ -9,10 +19,6 @@ formerly known as Python Mass Editor
 Implements a python mass editor class to process multiple files using Python
 code. The modification(s) is (are) shown on stdout as a diff output. One
 can then modify the target file(s) in place with the -w/--write option.
-
-.. image:: https://travis-ci.org/elmotec/massedit.png?branch=master
-    :target: https://travis-ci.org/elmotec/massedit
-    :alt: Build Status
 
 +--------------------------------------------------------------------------+
 | **WARNING**: A word of caution about the usage of ``eval()``             |
