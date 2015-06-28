@@ -14,18 +14,18 @@ can then modify the target file(s) in place with the -w/--write option.
     :target: https://travis-ci.org/elmotec/massedit
     :alt: Build Status
 
-
-.. WARNING::
-
-  This tool is usefull as far as it goes but it does rely on the python
-  ``eval()`` function and does not check the code being executed.
-  It is a major security risk and one should not use this tool
-  in a production environment.
-
-  See `Ned Batchelder's article`_ for a thorough discussion of the dangers
-  linked to ``eval()`` and ways to circumvent them. Note that None of the
-  counter-measure suggested in the article are implemented at this time.
-
++--------------------------------------------------------------------------+
+| **WARNING**: A word of caution about the usage of ``eval()``             |
++--------------------------------------------------------------------------+
+| This tool is useful as far as it goes but it does rely on the python     |
+| ``eval()`` function and does not check the code being executed.          |
+| **It is a major security risk** and one should not use this tool in a    |
+| production environment.                                                  |
+|                                                                          |
+| See `Ned Batchelder's article`_ for a thorough discussion of the dangers |
+| linked to ``eval()`` and ways to circumvent them. Note that None of the  |
+| counter-measure suggested in the article are implemented at this time.   |
++--------------------------------------------------------------------------+
 
 Usage
 -----
