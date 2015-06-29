@@ -190,6 +190,9 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.67.1 (2015-06-28)
+  Documentation fixes. 
+
 0.67 (2015-06-23)
   Added file_name argument to processing functions.
   Fixed incorrect closing of sys.stdout/stderr.
