@@ -23,7 +23,7 @@ setup(
     long_description=readme,
     test_suite='tests',
     setup_requires=[],
-    tests_require=['mock'],
+    tests_require=['mock', 'coverage'],
     classifiers=["Development Status :: 5 - Production/Stable",
                  "License :: OSI Approved :: MIT License",
                  "Environment :: Console",

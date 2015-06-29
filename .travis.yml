@@ -11,3 +11,6 @@ install:
 script:
     - python setup.py --quiet test
     - massedit --expression='line.replace("Copyright", "foobarfoobar")' LICENSE.txt | grep --quiet 'foobarfoobar'
+
+after_success:
+    - python -m coverage run --source massedit tests.py
