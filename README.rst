@@ -7,11 +7,11 @@
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
     :target: https://pypi.python.org/pypi/massedit
-    
-.. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg 
-    :target: https://coveralls.io/r/elmotec/massedit 
+
+.. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg
+    :target: https://coveralls.io/r/elmotec/massedit
     :alt: Coverage
-    
+
 
 ========
 massedit
@@ -46,8 +46,8 @@ expressions).
 
 ::
 
-  usage: massedit.py [-h] [-v] [-w] [-V] [-e EXPRESSIONS] [-s START_DIR]
-                     [-m MAX_DEPTH] [-o output]
+  usage: massedit.py [-h] [-V] [-w] [-v] [-e EXPRESSIONS] [-f FUNCTIONS]
+                     [-x EXECUTABLES] [-s START_DIRS] [-m MAX_DEPTH] [-o output]
                      pattern [pattern ...]
 
   Python mass editor
@@ -57,9 +57,9 @@ expressions).
 
   optional arguments:
     -h, --help            show this help message and exit
-    -v, --version         show program's version number and exit
+    -V, --version         show program's version number and exit
     -w, --write           modify target file(s) in place. Shows diff otherwise.
-    -V, --verbose         increases log verbosity (can be specified multiple
+    -v, --verbose         increases log verbosity (can be specified multiple
                           times)
     -e EXPRESSIONS, --expression EXPRESSIONS
                           Python expressions applied to target files. Use the
@@ -67,9 +67,11 @@ expressions).
     -f FUNCTIONS, --function FUNCTIONS
                           Python function to apply to target file. Takes file
                           content as input and yield lines. Specify function as
-                          <module>:<function name>.
-    -s START_DIR, --start START_DIR
-                          Directory from which to look for target files.
+                          [module]:?<function name>.
+    -x EXECUTABLES, --executable EXECUTABLES
+                          Python executable to apply to target file.
+    -s START_DIRS, --start START_DIRS
+                          Directory(ies) from which to look for targets.
     -m MAX_DEPTH, --max-depth-level MAX_DEPTH
                           Maximum depth when walking subdirectories.
     -o output, --output output
@@ -86,8 +88,7 @@ expressions).
   massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
 
 
-If massedit is installed as a package (from pypi for instance), one can
-interact with it as a command line tool :
+If massedit is installed as a package (from pypi for instance), one can interact with it as a command line tool:
 
 ::
 
