@@ -7,7 +7,7 @@ python:
 
 install:
     - python setup.py --quiet install
-    - pip install coverage python-coveralls
+    - pip --quiet install coverage python-coveralls
 
 script:
     - python setup.py --quiet test
