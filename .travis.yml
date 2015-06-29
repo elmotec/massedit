@@ -7,11 +7,12 @@ python:
 
 install:
     - python setup.py --quiet install
+    - pip install coverage python-coveralls
 
 script:
     - python setup.py --quiet test
     - massedit --expression='line.replace("Copyright", "foobarfoobar")' LICENSE.txt | grep --quiet 'foobarfoobar'
 
 after_success:
-    - python -m coverage run --source massedit tests.py
+    - coverage run --source massedit tests.py
     - coveralls
