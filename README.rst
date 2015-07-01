@@ -1,6 +1,10 @@
 .. image:: https://img.shields.io/pypi/v/massedit.svg
+    :target: https://pypi.python.org/pypi/massedit/
+    :alt: PyPi version
 
 .. image:: https://img.shields.io/pypi/pyversions/massedit.svg
+    :target: https://pypi.python.org/pypi/massedit/
+    :alt: Python compatibility
  	
 .. image:: https://img.shields.io/travis/elmotec/massedit.svg
     :target: https://travis-ci.org/elmotec/massedit
