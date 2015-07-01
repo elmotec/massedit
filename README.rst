@@ -15,6 +15,8 @@
     :alt: Coverage
     
 .. image:: https://img.shields.io/codacy/474b0af6853a4c5f8f9214d3220571f9.svg
+    :target: https://www.codacy.com/app/elmotec/massedit/dashboard
+    :alt: Codacy
 
 
 ========
