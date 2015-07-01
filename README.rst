@@ -1,5 +1,7 @@
 .. image:: https://img.shields.io/pypi/v/massedit.svg
 
+.. image:: https://img.shields.io/pypi/pyversions/massedit.svg
+ 	
 .. image:: https://img.shields.io/travis/elmotec/massedit.svg
     :target: https://travis-ci.org/elmotec/massedit
     :alt: Build Status
@@ -11,6 +13,8 @@
 .. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg
     :target: https://coveralls.io/r/elmotec/massedit
     :alt: Coverage
+    
+.. image:: https://img.shields.io/codacy/474b0af6853a4c5f8f9214d3220571f9.svg
 
 
 ========
