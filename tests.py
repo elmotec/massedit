@@ -92,8 +92,10 @@ class Workspace:
             parent_dir = os.getenv('TEMP')
         self.top_dir = self.get_directory(parent_dir=parent_dir)
 
-    def __del__(self):
-        """Clean up."""
+    # Cannot use __del__ here because self.top_dir does not always exist
+    # when _del__ is called: http://stackoverflow.com/questions/865115/
+    def cleanup(self):
+        """Delete temporary directories/files."""
         shutil.rmtree(self.top_dir)
 
     def get_base_name(self):
@@ -271,7 +273,7 @@ class TestMassEditWithFile(unittest.TestCase):
 
     def tearDown(self):
         """Remove the temporary file."""
-        del self.workspace
+        self.workspace.cleanup()
 
     def write_input_file(self, text, encoding=None):
         """Write text in input file.
@@ -467,7 +469,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
             fh.write(unicode("some text"))
 
     def tearDown(self):
-        pass
+        self.workspace.cleanup()
 
     def test_feature(self):
         """Trivial test to make sure setUp and tearDown work."""
