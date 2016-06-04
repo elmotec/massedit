@@ -1,6 +1,8 @@
 *.pyc
 *.swp
 *.tmp
+.coverage
+.idea
 .unison/ar*
 .unison/fp*
 .project

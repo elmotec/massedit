@@ -3,7 +3,7 @@
 
 """A python bulk editor class to apply the same code to many files."""
 
-# Copyright (c) 2012-15 Jérôme Lecomte
+# Copyright (c) 2012-16 Jérôme Lecomte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,22 +26,21 @@
 from __future__ import unicode_literals
 
 
-__version__ = '0.67.1'  # UPDATE setup.py when changing version.
-__author__ = 'Jérôme Lecomte'
-__license__ = 'MIT'
-
-
 import os
 import shutil
 import sys
 import logging
 import argparse
 import difflib
-# Most manip will involve re so we include it here for convenience.
-import re  # pylint: disable=W0611
+import re  # For convenience, pylint: disable=W0611
 import fnmatch
 import io
 import subprocess
+
+
+__version__ = '0.67.1'  # UPDATE setup.py when changing version.
+__author__ = 'Jérôme Lecomte'
+__license__ = 'MIT'
 
 
 log = logging.getLogger(__name__)
@@ -50,7 +49,17 @@ log = logging.getLogger(__name__)
 try:
     unicode
 except NameError:
-    unicode = str  # pylint: disable=invalid-name
+    unicode = str  # pylint: disable=invalid-name, redefined-builtin
+
+
+def is_list(arg):
+    """Factor determination if arg is a list.
+
+    Small utility for a better diagnostic because str/unicode are also
+    iterable.
+
+    """
+    return iter(arg) and not isinstance(arg, unicode)
 
 
 def get_function(fn_name):
@@ -100,6 +109,7 @@ class MassEdit(object):
         self._functions = []
         self._executables = []
         self.dry_run = None
+        self.encoding = 'utf-8'
         if 'module' in kwds:
             self.import_module(kwds['module'])
         if 'code' in kwds:
@@ -110,21 +120,39 @@ class MassEdit(object):
             self.append_executable(kwds['executable'])
         if 'dry_run' in kwds:
             self.dry_run = kwds['dry_run']
+        if 'encoding' in kwds:
+            self.encoding = kwds['encoding']
 
-    def __edit_line(self, line, code, code_obj):  # pylint: disable=R0201
+    @staticmethod
+    def import_module(module):  # pylint: disable=R0201
+        """Import module that are needed for the code expr to compile.
+
+        Argument:
+          module (str or list): module(s) to import.
+
+        """
+        if isinstance(module, list):
+            all_modules = module
+        else:
+            all_modules = [module]
+        for mod in all_modules:
+            globals()[mod] = __import__(mod.strip())
+
+    @staticmethod
+    def __edit_line(line, code, code_obj):  # pylint: disable=R0201
         """Edit a line with one code object built in the ctor."""
         try:
             # pylint: disable=eval-used
             result = eval(code_obj, globals(), locals())
         except TypeError as ex:
-            message = "failed to execute {}: {}".format(code, ex)
-            log.error(message)
+            log.error("failed to execute %s: %s", code, ex)
             raise
         if result is None:
             log.error("cannot process line '%s' with %s", line, code)
-            raise
+            raise RuntimeError('failed to process line')
         elif isinstance(result, list) or isinstance(result, tuple):
-            line = ' '.join([unicode(res_element) for res_element in result])
+            line = unicode(' '.join([unicode(res_element)
+                                     for res_element in result]))
         else:
             line = unicode(result)
         return line
@@ -135,7 +163,7 @@ class MassEdit(object):
             line = self.__edit_line(line, code, code_obj)
         return line
 
-    def edit_content(self, lines, file_name):
+    def edit_content(self, original_lines, file_name):
         """Processes a file contents.
 
         First processes the contents line by line applying the registered
@@ -143,16 +171,20 @@ class MassEdit(object):
         registered functions.
 
         Arguments:
-          lines (list): file content.
+          original_lines (list of str): file content.
+          file_name (str): name of the file.
 
         """
-        lines = [self.edit_line(line) for line in lines]
+        lines = [self.edit_line(line) for line in original_lines]
         for function in self._functions:
             try:
-                lines = function(lines, file_name)
+                lines = list(function(lines, file_name))
+            except UnicodeDecodeError as err:
+                log.error('failed to process %s: %s', file_name, err)
+                return lines
             except Exception as err:
-                msg = "failed to execute code: {}".format(err)
-                log.error(msg)
+                log.error("failed to process %s with code %s: %s",
+                          file_name, function, err)
                 raise  # Let the exception be handled at a higher level.
         return lines
 
@@ -160,12 +192,15 @@ class MassEdit(object):
         """Edit file in place, returns a list of modifications (unified diff).
 
         Arguments:
-          file_name: The name of the file.
-          dry_run: only return differences, but do not edit the file.
+          file_name (str, unicode): The name of the file.
 
         """
-        with io.open(file_name, "r", encoding='utf-8') as from_file:
-            from_lines = from_file.readlines()
+        with io.open(file_name, "r", encoding=self.encoding) as from_file:
+            try:
+                from_lines = from_file.readlines()
+            except UnicodeDecodeError as err:
+                log.error("encoding error (see --encoding): %s", err)
+                raise
 
         if self._executables:
             nb_execs = len(self._executables)
@@ -180,7 +215,7 @@ class MassEdit(object):
             except Exception as err:
                 log.error("failed to execute %s: %s", " ".join(exec_list), err)
                 raise  # Let the exception be handled at a higher level.
-            to_lines = output.split("\n")
+            to_lines = output.split(unicode("\n"))
         else:
             to_lines = from_lines
 
@@ -195,11 +230,13 @@ class MassEdit(object):
                 if sys.version_info < (3, 3):
                     raise OSError(msg)
                 else:
+                    # noinspection PyCompatibility
+                    # pylint: disable=undefined-variable
                     raise FileExistsError(msg)
             try:
                 os.rename(file_name, bak_file_name)
-                with io.open(file_name, "w", encoding='utf-8') as new_file:
-                    new_file.writelines(to_lines)
+                with io.open(file_name, 'w', encoding=self.encoding) as new:
+                    new.writelines(to_lines)
                 # Keeps mode of original file.
                 shutil.copymode(bak_file_name, file_name)
             except Exception as err:
@@ -220,7 +257,10 @@ class MassEdit(object):
 
     def append_code_expr(self, code):
         """Compile argument and adds it to the list of code objects."""
-        if not isinstance(code, str):  # expects a string.
+        # expects a string.
+        if isinstance(code, str) and not isinstance(code, unicode):
+            code = unicode(code)
+        if not isinstance(code, unicode):
             raise TypeError("string expected")
         log.debug("compiling code %s...", code)
         try:
@@ -256,7 +296,9 @@ class MassEdit(object):
           executable (str): os callable executable.
 
         """
-        if not isinstance(executable, str):
+        if isinstance(executable, str) and not isinstance(executable, unicode):
+            executable = unicode(executable)
+        if not isinstance(executable, unicode):
             raise TypeError("expected executable name as str, not {}".
                             format(executable.__class__.__name__))
         self._executables.append(executable)
@@ -281,20 +323,6 @@ class MassEdit(object):
         """Check and set the executables to be used."""
         for exc in executables:
             self.append_executable(exc)
-
-    def import_module(self, module):  # pylint: disable=R0201
-        """Import module that are needed for the code expr to compile.
-
-        Argument:
-          module (str or list): module(s) to import.
-
-        """
-        if isinstance(module, list):
-            all_modules = module
-        else:
-            all_modules = [module]
-        for mod in all_modules:
-            globals()[mod] = __import__(mod.strip())
 
 
 def parse_command_line(argv):
@@ -331,24 +359,26 @@ def parse_command_line(argv):
                         action="count", default=0,
                         help="increases log verbosity (can be specified "
                         "multiple times)")
-    parser.add_argument('-e', "--expression", dest="expressions", nargs=1,
+    parser.add_argument("-e", "--expression", dest="expressions", nargs=1,
                         help="Python expressions applied to target files. "
                         "Use the line variable to reference the current line.")
-    parser.add_argument('-f', "--function", dest="functions", nargs=1,
+    parser.add_argument("-f", "--function", dest="functions", nargs=1,
                         help="Python function to apply to target file. "
                         "Takes file content as input and yield lines. "
                         "Specify function as [module]:?<function name>.")
-    parser.add_argument('-x', "--executable", dest="executables", nargs=1,
+    parser.add_argument("-x", "--executable", dest="executables", nargs=1,
                         help="Python executable to apply to target file.")
     parser.add_argument("-s", "--start", dest="start_dirs",
                         help="Directory(ies) from which to look for targets.")
-    parser.add_argument('-m', "--max-depth-level", type=int, dest="max_depth",
+    parser.add_argument("-m", "--max-depth-level", type=int, dest="max_depth",
                         help="Maximum depth when walking subdirectories.")
-    parser.add_argument('-o', '--output', metavar="output",
-                        type=argparse.FileType('w'), default=sys.stdout,
+    parser.add_argument("-o", "--output", metavar="output",
+                        type=argparse.FileType("w"), default=sys.stdout,
                         help="redirect output to a file")
-    parser.add_argument('patterns', metavar="pattern",
-                        nargs='+',  # argparse.REMAINDER,
+    parser.add_argument("--encoding", dest="encoding",
+                        help="Encoding of input and output files")
+    parser.add_argument("patterns", metavar="pattern",
+                        nargs="+",  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
 
@@ -391,11 +421,11 @@ def get_paths(patterns, start_dirs=None, max_depth=1):
                 yield path
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-locals
 def edit_files(patterns, expressions=None,
                functions=None, executables=None,
                start_dirs=None, max_depth=1, dry_run=True,
-               output=sys.stdout):
+               output=sys.stdout, encoding=None):
     """Process patterns with MassEdit.
 
     Arguments:
@@ -406,7 +436,7 @@ def edit_files(patterns, expressions=None,
 
     Keyword arguments:
       max_depth: maximum recursion level when looking for file matches.
-      start_dirs: directory(ies) where to start the file search.
+      start_dirs: workspace(ies) where to start the file search.
       dry_run: only display differences if True. Save modified file otherwise.
       output: handle where the output should be redirected.
 
@@ -414,17 +444,16 @@ def edit_files(patterns, expressions=None,
       list of files processed.
 
     """
-    # Makes for a better diagnostic because str are also iterable.
-    if not iter(patterns) or isinstance(patterns, str):
+    if not is_list(patterns):
         raise TypeError("patterns should be a list")
-    if expressions and (not iter(expressions) or isinstance(expressions, str)):
+    if expressions and not is_list(expressions):
         raise TypeError("expressions should be a list of exec expressions")
-    if functions and (not iter(functions) or isinstance(functions, str)):
+    if functions and not is_list(functions):
         raise TypeError("functions should be a list of functions")
-    if executables and (not iter(executables) or isinstance(executables, str)):
+    if executables and not is_list(executables):
         raise TypeError("executables should be a list of program names")
 
-    editor = MassEdit(dry_run=dry_run)
+    editor = MassEdit(dry_run=dry_run, encoding=encoding)
     if expressions:
         editor.set_code_exprs(expressions)
     if functions:
@@ -435,9 +464,24 @@ def edit_files(patterns, expressions=None,
     processed_paths = []
     for path in get_paths(patterns, start_dirs=start_dirs,
                           max_depth=max_depth):
-        diffs = list(editor.edit_file(path))
-        if dry_run:
-            output.write("".join(diffs))
+        try:
+            diffs = list(editor.edit_file(path))
+            if dry_run:
+                # At this point, encoding is the input encoding.
+                diff = "".join(diffs)
+                if not diff:
+                    return
+                # The encoding of the target output may not match the input
+                # encoding. If it's defined, we round trip the diff text
+                # to bytes and back to silence any conversion errors.
+                encoding = output.encoding
+                if encoding:
+                    bytes_diff = diff.encode(encoding=encoding, errors='ignore')
+                    diff = bytes_diff.decode(encoding=output.encoding)
+                output.write(diff)
+        except UnicodeDecodeError as err:
+            log.error("failed to process %s: %s", path, err)
+            continue
         processed_paths.append(os.path.abspath(path))
     return processed_paths
 
@@ -457,7 +501,8 @@ def command_line(argv):
                        start_dirs=arguments.start_dirs,
                        max_depth=arguments.max_depth,
                        dry_run=arguments.dry_run,
-                       output=arguments.output)
+                       output=arguments.output,
+                       encoding=arguments.encoding)
     # If the output is not sys.stdout, we need to close it because
     # argparse.FileType does not do it for us.
     is_sys = arguments.output in [sys.stdout, sys.stderr]

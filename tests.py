@@ -3,7 +3,7 @@
 
 """Test module to test massedit."""
 
-# Copyright (c) 2012-15 Jérôme Lecomte
+# Copyright (c) 2012-16 Jérôme Lecomte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os
-import sys
+from __future__ import unicode_literals
+
+import io
 import logging
+import os
+import platform
+import shutil
+import sys
+import textwrap
 import unittest
+
 if sys.version_info < (3, 3):
     import mock  # pylint: disable=import-error
 else:
-    from unittest import mock  # pylint: disable=import-error
-import tempfile
-import io
-import platform
+    from unittest import mock  # pylint: disable=import-error, no-name-in-module
 
 import massedit
 
+try:
+    unicode
+except NameError:
+    unicode = str  # pylint: disable=invalid-name, redefined-builtin
 
-zen = """The Zen of Python, by Tim Peters
+
+zen = unicode("""The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
 Explicit is better than implicit.
@@ -59,7 +68,56 @@ Although never is often better than *right* now.
 If the implementation is hard to explain, it's a bad idea.
 If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea -- let's do more of those!
-"""
+""")
+
+class Workspace:
+    """Wraps creation of files/workspace.
+
+    For some reason tempfile.mkdtemp() causes problems with Python 2.7:
+      File "C:\Python27\lib\random.py", line 113, in seed
+        a = long(_hexlify(_urandom(2500)), 16)
+    TypeError: 'NoneType' object is not callable
+
+    """
+
+    def __init__(self, parent_dir=None):
+        """Initialize Temp class.
+
+        :param tmpdir: workspace where to create temporary files/dirs.
+
+        """
+
+        if not parent_dir:
+            parent_dir = os.getenv('TEMP')
+        self.dir = self.get_directory(parent_dir=parent_dir)
+
+    def __del__(self):
+        """Clean up."""
+        shutil.rmtree(self.dir)
+
+    def get_base_name(self):
+        """Create a base """
+        import binascii
+        return 'massedit' + unicode(binascii.hexlify(os.urandom(4)))
+
+    def get_directory(self, parent_dir=None):
+        """Create a temporary workspace in parent_dir."""
+
+        if not parent_dir:
+            parent_dir = self.dir
+        dir_name = os.path.join(parent_dir, self.get_base_name())
+        os.mkdir(dir_name)
+        return dir_name
+
+    def get_file(self, parent_dir=None, extension=None):
+        """Get a new temporary file name."""
+
+        if not parent_dir:
+            parent_dir = self.dir
+        file_name = os.path.join(parent_dir, self.get_base_name())
+        if extension:
+            file_name += extension
+        return file_name
 
 
 class LogInterceptor:  # pylint: disable=too-few-public-methods
@@ -134,6 +192,9 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
     def setUp(self):
         self.editor = massedit.MassEdit()
 
+    def tearDown(self):
+        del self.editor
+
     def test_no_change(self):
         """Test the editor does nothing when not told to do anything."""
         input_line = "some info"
@@ -170,17 +231,12 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
             self.editor.edit_line('some line')
         massedit.log.disabled = False
 
-    @unittest.skip("FIXME. Will revisit this one.")
     def test_missing_module(self):
         """Check that missing module generates an exception."""
-        remove_module('random')
-        self.assertNotIn('random', sys.modules)
-        #random.randint(0,10)  # Fails as it should.
-        self.editor.append_code_expr('random.randint(0,10)')  # works ?!
+        self.editor.append_code_expr('random.randint(0,10)')
         with self.assertRaises(NameError):
-            self.editor.append_code_expr("random.randint(0,10)")  # Houston...
+            self.editor.edit_line('need to edit a line to execute the code')
 
-    @unittest.skip("FIXME. remove_module causes problem with os.urandom.")
     def test_module_import(self):
         """Check the module import functinality."""
         remove_module('random')
@@ -201,22 +257,72 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(actual_file, expected_file)
 
 
-class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
+class TestMassEditWithFile(unittest.TestCase):
 
-    """Test the command line interface of massedit.py."""
+    """Test massedit with an actual file."""
 
     def setUp(self):
-        """Creates a temporary file to work with."""
-        self.text = zen
-        self.start_directory = tempfile.mkdtemp()
-        self.file_name = os.path.join(self.start_directory, "somefile.txt")
-        with open(self.file_name, "w+") as fh:
-            fh.write(self.text)
+        self.editor = massedit.MassEdit()
+        self.workspace = Workspace()
+        self.file_name = os.path.join(self.workspace.dir,
+                                      unicode("somefile.txt"))
 
     def tearDown(self):
         """Remove the temporary file."""
-        os.unlink(self.file_name)
-        os.rmdir(self.start_directory)
+        del self.workspace
+
+    def write_input_file(self, text, encoding=None):
+        """Write text in input file.
+
+        :param encoding: defaults to utf-8
+
+        """
+        if not encoding:
+            encoding = 'utf-8'
+        with io.open(self.file_name, "w+", encoding=encoding) as fh:
+            fh.write(text)
+
+    def test_non_utf8_with_utf8_setting(self):
+        """Check files with non-utf8 characters are skipped with a warning."""
+        log_sink = LogInterceptor(massedit.log)
+        content = unicode("This is ok\nThis \u00F1ot")
+        self.write_input_file(content, encoding='cp1252')
+
+        def identity(lines, _):
+            """Return the line itself."""
+            for line in lines:
+                yield line
+
+        self.editor.append_function(identity)
+        with self.assertRaises(UnicodeDecodeError):
+            _ = self.editor.edit_file(self.file_name)
+        self.assertIn('encoding error', log_sink.log)
+
+    def test_handling_of_cp1252(self):
+        """Check files with non-utf8 characters are skipped with a warning."""
+        encoding = 'cp1252'
+        self.editor.encoding = encoding
+        content = unicode("This is ok\nThis \u00F1ot")
+        self.write_input_file(content, encoding=encoding)
+
+        def identity(lines, _):
+            """Return the line itself."""
+            for line in lines:
+                yield line
+
+        self.editor.append_function(identity)
+        diffs = self.editor.edit_file(self.file_name)
+        self.assertEqual(diffs, [])
+
+
+class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
+
+    """Test the command line interface of massedit.py with actual file."""
+
+    def setUp(self):
+        """Use zen of Python as content."""
+        TestMassEditWithFile.setUp(self)
+        self.write_input_file(zen)
 
     def test_setup(self):
         """Check that we have a temporary file to work with."""
@@ -224,10 +330,8 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
 
     def test_replace_in_file(self):
         """Check editing of an entire file."""
-        import textwrap
-        editor = massedit.MassEdit()
-        editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
-        diffs = editor.edit_file(self.file_name)
+        self.editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
+        diffs = self.editor.edit_file(self.file_name)
         self.assertEqual(len(diffs), 11)
         expected_diffs = textwrap.dedent("""
          There should be one-- and preferably only one --obvious way to do it.
@@ -238,18 +342,13 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
 
     def test_replace_cannot_backup(self):
         """Check replacement fails if backup fails."""
-        import shutil
-        editor = massedit.MassEdit()
-        editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
+        self.editor.append_code_expr("re.sub('Dutch', 'Guido', line)")
         backup = self.file_name + ".bak"
         try:
             shutil.copy(self.file_name, backup)
-            if sys.version_info < (3, 3):
-                error = OSError
-            else:
-                error = FileExistsError
-            with self.assertRaises(error):
-                editor.edit_file(self.file_name)
+            # FileExistsError in more recent version of Python.
+            with self.assertRaises(OSError):
+                self.editor.edit_file(self.file_name)
         finally:
             os.unlink(backup)
 
@@ -258,11 +357,11 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
-                               "-w", "-s", self.start_directory,
+                               "-w", "-s", self.workspace.dir,
                                file_base_name])
-        with open(self.file_name, "r") as new_file:
+        with io.open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
-        original_lines = self.text.splitlines(True)
+        original_lines = zen.splitlines(True)
         self.assertEqual(len(new_lines), len(original_lines))
         n_lines = len(new_lines)
         for line in range(n_lines):
@@ -276,33 +375,33 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
                 self.assertEqual(new_lines[line - 1], expected_line_16)
 
     def test_command_line_check(self):
-        """Check dry run via command line with start directory option."""
-        out_file_name = tempfile.mktemp()
+        """Check dry run via command line with start workspace option."""
+        out_file_name = self.workspace.get_file()
         basename = os.path.basename(self.file_name)
         arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name,
-                     "-s", self.start_directory,
+                     "-s", self.workspace.dir,
                      basename]
         processed = massedit.command_line(arguments)
         self.assertEqual(processed, [os.path.abspath(self.file_name)])
-        with open(self.file_name, "r") as updated_file:
+        with io.open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
-        original_lines = self.text.splitlines(True)
+        original_lines = zen.splitlines(True)
         self.assertEqual(original_lines, new_lines)
         self.assertTrue(os.path.exists(out_file_name))
         os.unlink(out_file_name)
 
     def test_absolute_path_arg(self):
         """Check dry run via command line with single file name argument."""
-        out_file_name = tempfile.mktemp()
+        out_file_name = self.workspace.get_file()
         arguments = ["massedit.py", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name,
                      self.file_name]
         processed = massedit.command_line(arguments)
         self.assertEqual(processed, [os.path.abspath(self.file_name)])
-        with open(self.file_name, "r") as updated_file:
+        with io.open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
-        original_lines = self.text.splitlines(True)
+        original_lines = zen.splitlines(True)
         self.assertEqual(original_lines, new_lines)
         self.assertTrue(os.path.exists(out_file_name))
         os.unlink(out_file_name)
@@ -312,12 +411,12 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         processed = massedit.edit_files([file_base_name],
                                         ["re.sub('Dutch', 'Guido', line)"],
-                                        [], start_dirs=self.start_directory,
+                                        [], start_dirs=self.workspace.dir,
                                         dry_run=False)
         self.assertEqual(processed, [self.file_name])
-        with open(self.file_name, "r") as new_file:
+        with io.open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
-        original_lines = self.text.splitlines(True)
+        original_lines = zen.splitlines(True)
         self.assertEqual(len(new_lines), len(original_lines))
         n_lines = len(new_lines)
         for line in range(n_lines):
@@ -347,7 +446,7 @@ class TestMassEditWithFile(unittest.TestCase):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
-                               "-w", "-s", self.start_directory,
+                               "-w", "-s", self.workspace,
                                file_base_name])
         statinfo = os.stat(self.file_name)
         self.assertEqual(statinfo.st_mode, mode)
@@ -358,17 +457,15 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
     """Test recursion when processing files."""
 
     def setUp(self):
-        self.directory = tempfile.mkdtemp()
-        self.subdirectory = os.path.join(self.directory, "subdir")
-        os.mkdir(self.subdirectory)
-        self.file_name = os.path.join(self.subdirectory, "somefile.txt")
-        with open(self.file_name, "w+") as fh:
-            fh.write("some text")
+        self.workspace = Workspace()
+        self.subdirectory = self.workspace.get_directory()
+        self.file_name = self.workspace.get_file(parent_dir=self.subdirectory,
+                                                 extension='.txt')
+        with io.open(self.file_name, "w+") as fh:
+            fh.write(unicode("some text"))
 
     def tearDown(self):
-        os.unlink(self.file_name)
-        os.rmdir(self.subdirectory)
-        os.rmdir(self.directory)
+        del self.workspace
 
     def test_feature(self):
         """Trivial test to make sure setUp and tearDown work."""
@@ -376,25 +473,46 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
 
     def test_process_subdirectory(self):
         """Check that the editor works correctly in subdirectories."""
-        arguments = ["-r", "-s", self.directory, "-w",
-                     "-e",  "re.sub('text', 'blah blah', line)",
+        arguments = ["-r", "-s", self.workspace.dir, "-w",
+                     "-e", "re.sub('text', 'blah blah', line)",
                      "*.txt"]
         processed_files = massedit.command_line(arguments)
         self.assertEqual(processed_files, [self.file_name])
-        with open(self.file_name) as fh:
+        with io.open(self.file_name) as fh:
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some blah blah"])
 
     def test_maxdepth_one(self):
         """Check that specifying -m 1 prevents modifiction to subdir."""
-        arguments = ["-r", "-s", self.directory, "-w",
+        arguments = ["-r", "-s", self.workspace.dir, "-w",
                      "-e", "re.sub('text', 'blah blah', line)",
                      "-m", "0", "*.txt"]
         processed_files = massedit.command_line(arguments)
         self.assertEqual(processed_files, [])
-        with open(self.file_name) as fh:
+        with io.open(self.file_name) as fh:
             new_lines = fh.readlines()
         self.assertEqual(new_lines, ["some text"])
+
+
+class TestIsList(unittest.TestCase):
+
+    """Test the is_list function."""
+
+    def test_single_element_list(self):
+        """Base case."""
+        self.assertTrue(massedit.is_list(['test']))
+
+    def test_empty_list(self):
+        """Empty lists should work too."""
+        self.assertTrue(massedit.is_list([]))
+
+    def test_string_not_ok(self):
+        """String should not be confused with lists"""
+        self.assertFalse(massedit.is_list('test'))
+
+    def test_unicode_string_not_ok(self):
+        """String should not be confused with lists"""
+        self.assertFalse(massedit.is_list(unicode('test')))
 
 
 class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
@@ -455,10 +573,9 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         """Check error when the function name is not valid."""
         log_sink = LogInterceptor(massedit.log)
         with self.assertRaises(AttributeError):
-            massedit.edit_files(['tests.py'], functions=['massedit:bong'])
-        expected = "'massedit:bong' is not a callable function: " + \
-                   "'module' object has no attribute 'bong'\n"
-        self.assertEqual(log_sink.log, expected)
+            massedit.edit_files(['tests.py'], functions=['massedit:bad_fun'])
+        expected = "has no attribute 'bad_fun'\n"
+        self.assertIn(expected, log_sink.log)
 
     def test_missing_function_name(self):
         """Check error when the function is empty but not the module."""
@@ -502,6 +619,15 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(actual[3], '-#!/usr/bin/env python')
         self.assertEqual(actual[-1], '+#!/usr/bin/env python+')
 
+    def test_write_to_cp437_output(self):
+        """Check writing to a cp437 output (e.g. Windows console)."""
+        raw = io.BytesIO()
+        output = io.TextIOWrapper(io.BufferedWriter(raw),
+                                  encoding='cp437')  # Windows console.
+        massedit.edit_files(['tests.py'], expressions=['line[:10]'],
+                            output=output)
+        actual = raw.getvalue()
+        self.assertIsNotNone(actual)
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
