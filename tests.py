@@ -83,28 +83,30 @@ class Workspace:
     def __init__(self, parent_dir=None):
         """Initialize Temp class.
 
-        :param tmpdir: workspace where to create temporary files/dirs.
+        Arguments:
+          parent_dir (str): workspace where to create temporary files/dirs.
 
         """
 
         if not parent_dir:
             parent_dir = os.getenv('TEMP')
-        self.dir = self.get_directory(parent_dir=parent_dir)
+        self.top_dir = self.get_directory(parent_dir=parent_dir)
 
     def __del__(self):
         """Clean up."""
-        shutil.rmtree(self.dir)
+        shutil.rmtree(self.top_dir)
 
     def get_base_name(self):
         """Create a base """
         import binascii
-        return 'massedit' + unicode(binascii.hexlify(os.urandom(4)))
+        suffix = binascii.hexlify(os.urandom(4)).decode('ascii')
+        return 'massedit' + suffix
 
     def get_directory(self, parent_dir=None):
         """Create a temporary workspace in parent_dir."""
 
         if not parent_dir:
-            parent_dir = self.dir
+            parent_dir = self.top_dir
         dir_name = os.path.join(parent_dir, self.get_base_name())
         os.mkdir(dir_name)
         return dir_name
@@ -113,7 +115,7 @@ class Workspace:
         """Get a new temporary file name."""
 
         if not parent_dir:
-            parent_dir = self.dir
+            parent_dir = self.top_dir
         file_name = os.path.join(parent_dir, self.get_base_name())
         if extension:
             file_name += extension
@@ -264,7 +266,7 @@ class TestMassEditWithFile(unittest.TestCase):
     def setUp(self):
         self.editor = massedit.MassEdit()
         self.workspace = Workspace()
-        self.file_name = os.path.join(self.workspace.dir,
+        self.file_name = os.path.join(self.workspace.top_dir,
                                       unicode("somefile.txt"))
 
     def tearDown(self):
@@ -357,7 +359,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
-                               "-w", "-s", self.workspace.dir,
+                               "-w", "-s", self.workspace.top_dir,
                                file_base_name])
         with io.open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
@@ -380,7 +382,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         basename = os.path.basename(self.file_name)
         arguments = ["test", "-e", "re.sub('Dutch', 'Guido', line)",
                      "-o", out_file_name,
-                     "-s", self.workspace.dir,
+                     "-s", self.workspace.top_dir,
                      basename]
         processed = massedit.command_line(arguments)
         self.assertEqual(processed, [os.path.abspath(self.file_name)])
@@ -411,7 +413,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         processed = massedit.edit_files([file_base_name],
                                         ["re.sub('Dutch', 'Guido', line)"],
-                                        [], start_dirs=self.workspace.dir,
+                                        [], start_dirs=self.workspace.top_dir,
                                         dry_run=False)
         self.assertEqual(processed, [self.file_name])
         with io.open(self.file_name, "r") as new_file:
@@ -465,7 +467,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
             fh.write(unicode("some text"))
 
     def tearDown(self):
-        del self.workspace
+        pass
 
     def test_feature(self):
         """Trivial test to make sure setUp and tearDown work."""
@@ -473,7 +475,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
 
     def test_process_subdirectory(self):
         """Check that the editor works correctly in subdirectories."""
-        arguments = ["-r", "-s", self.workspace.dir, "-w",
+        arguments = ["-r", "-s", self.workspace.top_dir, "-w",
                      "-e", "re.sub('text', 'blah blah', line)",
                      "*.txt"]
         processed_files = massedit.command_line(arguments)
@@ -484,7 +486,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
 
     def test_maxdepth_one(self):
         """Check that specifying -m 1 prevents modifiction to subdir."""
-        arguments = ["-r", "-s", self.workspace.dir, "-w",
+        arguments = ["-r", "-s", self.workspace.top_dir, "-w",
                      "-e", "re.sub('text', 'blah blah', line)",
                      "-m", "0", "*.txt"]
         processed_files = massedit.command_line(arguments)

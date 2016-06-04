@@ -2,6 +2,7 @@
 *.swp
 *.tmp
 .coverage
+.eggs
 .idea
 .unison/ar*
 .unison/fp*
