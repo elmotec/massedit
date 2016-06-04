@@ -31,6 +31,7 @@ import os
 import platform
 import shutil
 import sys
+import tempfile
 import textwrap
 import unittest
 
@@ -86,10 +87,15 @@ class Workspace:
         Arguments:
           parent_dir (str): workspace where to create temporary files/dirs.
 
+        If parent_dir is not given, uses tempfile pacakge to try to get a
+        temporary directory. If that fails, use the current working directory.
+
         """
 
-        if not parent_dir:
-            parent_dir = os.getenv('TEMP')
+        if parent_dir is None:
+            parent_dir = tempfile.tempdir
+            if parent_dir is None:
+                parent_dir = os.path.abspath(os.path.curdir)
         self.top_dir = self.get_directory(parent_dir=parent_dir)
 
     # Cannot use __del__ here because self.top_dir does not always exist
@@ -105,9 +111,9 @@ class Workspace:
         return 'massedit' + suffix
 
     def get_directory(self, parent_dir=None):
-        """Create a temporary workspace in parent_dir."""
+        """Create a temporary directory in parent_dir."""
 
-        if not parent_dir:
+        if parent_dir is None:
             parent_dir = self.top_dir
         dir_name = os.path.join(parent_dir, self.get_base_name())
         os.mkdir(dir_name)
@@ -450,7 +456,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         file_base_name = os.path.basename(self.file_name)
         massedit.command_line(["massedit.py", "-w", "-e",
                                "re.sub('Dutch', 'Guido', line)",
-                               "-w", "-s", self.workspace,
+                               "-w", "-s", self.workspace.top_dir,
                                file_base_name])
         statinfo = os.stat(self.file_name)
         self.assertEqual(statinfo.st_mode, mode)
