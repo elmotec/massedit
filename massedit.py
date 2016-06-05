@@ -38,7 +38,7 @@ import io
 import subprocess
 
 
-__version__ = '0.68'  # UPDATE setup.py when changing version.
+__version__ = '0.68.1'  # UPDATE setup.py when changing version.
 __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 
