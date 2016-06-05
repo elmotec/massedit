@@ -201,9 +201,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
-0.68 (2016-06-04)
+0.68.1 (2016-06-04)
   Fixed encoding issues when processing non-ascii files.
   Added --encoding option to force the value of the encoding if need be.
+  Listed support for Python 3.5
 
 0.67.1 (2015-06-28)
   Documentation fixes. 
