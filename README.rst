@@ -86,6 +86,7 @@ expressions).
                           Maximum depth when walking subdirectories.
     -o output, --output output
                           redirect output to a file
+    --encoding ENCODING   Encoding of input and output files
 
   Examples:
   # Simple string substitution (-e). Will show a diff. No changes applied.
@@ -199,6 +200,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
 Changes
 -------
+
+0.68 (2016-06-04)
+  Fixed encoding issues when processing non-ascii files.
+  Added --encoding option to force the value of the encoding if need be.
 
 0.67.1 (2015-06-28)
   Documentation fixes. 
