@@ -203,9 +203,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
-0.68.2 (2017-09-20)
+0.68.3 (2017-09-20)
   Added --generate option to quickly generate a fixer.py template file
-  to be modified to be used with -f fixer.fixit option.
+  to be modified to be used with -f fixer.fixit option. Added official
+  support for Python 3.6
 
 0.68.1 (2016-06-04)
   Fixed encoding issues when processing non-ascii files.
