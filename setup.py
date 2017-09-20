@@ -11,9 +11,9 @@ readme = open(os.path.join(here, 'README.rst')).read()
 
 setup(
     name="massedit",
-    version="0.68.1",
+    version="0.68.2",
     author="Jérôme Lecomte",
-    author_email="jlecomte1972@yahoo.com",
+    author_email="elmotec@gmx.com",
     description='Edit multiple files using Python text processing modules',
     license="MIT",
     keywords="sed editor stream python edit mass",
