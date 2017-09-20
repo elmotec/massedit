@@ -84,8 +84,10 @@ expressions).
                           Directory(ies) from which to look for targets.
     -m MAX_DEPTH, --max-depth-level MAX_DEPTH
                           Maximum depth when walking subdirectories.
-    -o output, --output output
+    -o FILE, --output FILE
                           redirect output to a file
+    -g FILE, --generate FILE
+                          generate input file suitable for -f option
     --encoding ENCODING   Encoding of input and output files
 
   Examples:
@@ -207,6 +209,7 @@ Changes
   Listed support for Python 3.5
 
 0.67.1 (2015-06-28)
+  Documentation fixes.
 
 0.67 (2015-06-23)
   Added file_name argument to processing functions.
