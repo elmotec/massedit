@@ -3,7 +3,7 @@
 
 """A python bulk editor class to apply the same code to many files."""
 
-# Copyright (c) 2012-16 Jérôme Lecomte
+# Copyright (c) 2012-17 Jérôme Lecomte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ import re  # For convenience, pylint: disable=W0611
 import fnmatch
 import io
 import subprocess
+import textwrap
 
 
 __version__ = '0.68.1'  # UPDATE setup.py when changing version.
@@ -340,7 +341,7 @@ def parse_command_line(argv):
     {0} -e "re.sub('failIf', 'assertFalse', line)" *.py
 
     # File level modifications (-f). Overwrites the files in place (-w).
-    {0} -w -f fixer:main *.py
+    {0} -w -f fixer:fixit *.py
 
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
@@ -372,21 +373,24 @@ def parse_command_line(argv):
                         help="Directory(ies) from which to look for targets.")
     parser.add_argument("-m", "--max-depth-level", type=int, dest="max_depth",
                         help="Maximum depth when walking subdirectories.")
-    parser.add_argument("-o", "--output", metavar="output",
+    parser.add_argument("-o", "--output", metavar="FILE",
                         type=argparse.FileType("w"), default=sys.stdout,
                         help="redirect output to a file")
+    parser.add_argument("-g", "--generate", metavar="FILE", type=str,
+                        help="generate input file suitable for -f option")
     parser.add_argument("--encoding", dest="encoding",
                         help="Encoding of input and output files")
     parser.add_argument("patterns", metavar="pattern",
-                        nargs="+",  # argparse.REMAINDER,
+                        nargs="*",  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
     arguments = parser.parse_args(argv[1:])
 
     if not (arguments.expressions or
             arguments.functions or
+            arguments.generate or
             arguments.executables):
         parser.error(
-            '--expression, --function, or --executable must be specified')
+            '--expression, --function, --generate or --executable missing')
 
     # Sets log level to WARN going more verbose for each new -V.
     log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
@@ -419,6 +423,41 @@ def get_paths(patterns, start_dirs=None, max_depth=1):
             for name in names:
                 path = os.path.join(root, name)
                 yield path
+
+
+fixer_template = """\
+#!/usr/bin/env python
+
+def fixit(lines, file_name):
+    '''Edit files passed to massedit
+
+    :param list(str) lines: list of lines contained in the input file
+    :param str file_name: name of the file the lines were read from
+
+    :return: modified lines
+    :rtype: list(str)
+
+    Please modify the logic below (it does not change anything right now)
+    and apply your logic to the in your directory like this:
+
+    massedit -f <file name>:fixit files_to_modify\*
+
+    See massedit -h for help and other options.
+
+    '''
+    changed_lines = []
+    for lineno, line in enumerate(lines):
+        changed_lines.append(line)
+    return changed_lines
+
+
+"""
+
+def generate_fixer_file(output):
+    """Generate a template fixer file to be used with --function option."""
+    with open(output, "w+") as fh:
+        fh.write(fixer_template)
+    return
 
 
 # pylint: disable=too-many-arguments, too-many-locals
@@ -494,6 +533,8 @@ def command_line(argv):
 
     """
     arguments = parse_command_line(argv)
+    if arguments.generate:
+        generate_fixer_file(arguments.generate)
     paths = edit_files(arguments.patterns,
                        expressions=arguments.expressions,
                        functions=arguments.functions,

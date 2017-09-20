@@ -3,7 +3,7 @@
 
 """Test module to test massedit."""
 
-# Copyright (c) 2012-16 Jérôme Lecomte
+# Copyright (c) 2012-17 Jérôme Lecomte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -75,7 +75,7 @@ class Workspace:
     """Wraps creation of files/workspace.
 
     For some reason tempfile.mkdtemp() causes problems with Python 2.7:
-      File "C:\Python27\lib\random.py", line 113, in seed
+      File "C:\\Python27\\lib\\random.py", line 113, in seed
         a = long(_hexlify(_urandom(2500)), 16)
     TypeError: 'NoneType' object is not callable
 
@@ -622,6 +622,8 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         """Check trivial call using executable."""
         output = io.StringIO()
         execname = 'head -1'
+        if platform.system() == 'Windows':
+            execname = 'powershell -c gc -head 1'
         next(massedit.get_paths(['tests.py']))
         massedit.edit_files(['tests.py'], executables=[execname],
                             output=output)
@@ -638,6 +640,14 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
                             output=output)
         actual = raw.getvalue()
         self.assertIsNotNone(actual)
+
+    @mock.patch('builtins.open', new_callable=mock.mock_open)
+    def test_generate_fixer(self, mock_open):
+        """Generate a fixer template file with --generate option."""
+        cmd = 'massedit.py --generate fixer.py'
+        massedit.command_line(cmd.split())
+        mock_open.assert_called_with('fixer.py', 'w+')
+        mock_open().write.assert_called_with(massedit.fixer_template)
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
