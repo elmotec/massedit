@@ -37,8 +37,10 @@ import unittest
 
 if sys.version_info < (3, 3):
     import mock  # pylint: disable=import-error
+    builtins = '__builtin__'
 else:
     from unittest import mock  # pylint: disable=import-error, no-name-in-module
+    builtins = 'builtins'
 
 import massedit
 
@@ -641,13 +643,14 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         actual = raw.getvalue()
         self.assertIsNotNone(actual)
 
-    @mock.patch('builtins.open', new_callable=mock.mock_open)
+    @mock.patch(builtins + '.open', new_callable=mock.mock_open)
     def test_generate_fixer(self, mock_open):
         """Generate a fixer template file with --generate option."""
         cmd = 'massedit.py --generate fixer.py'
         massedit.command_line(cmd.split())
         mock_open.assert_called_with('fixer.py', 'w+')
         mock_open().write.assert_called_with(massedit.fixer_template)
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
