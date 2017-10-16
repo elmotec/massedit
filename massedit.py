@@ -509,7 +509,7 @@ def edit_files(patterns, expressions=None,
                 # At this point, encoding is the input encoding.
                 diff = "".join(diffs)
                 if not diff:
-                    return
+                    continue
                 # The encoding of the target output may not match the input
                 # encoding. If it's defined, we round trip the diff text
                 # to bytes and back to silence any conversion errors.
