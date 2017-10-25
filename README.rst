@@ -203,6 +203,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.68.4 (2017-10-24)
+  Fixed bug that would cause changes to be missed when the -w option is
+  ommited. Thanks tgoodlet!
+
 0.68.3 (2017-09-20)
   Added --generate option to quickly generate a fixer.py template file
   to be modified to be used with -f fixer.fixit option. Added official
@@ -261,6 +265,7 @@ Contributor acknowledgement
 ---------------------------
 
 Steven Myint, https://github.com/myint
+tgoodlet, https://github/tgoodlet
 
 
 

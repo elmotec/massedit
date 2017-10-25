@@ -471,10 +471,13 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
     def setUp(self):
         self.workspace = Workspace()
         self.subdirectory = self.workspace.get_directory()
-        self.file_name = self.workspace.get_file(parent_dir=self.subdirectory,
-                                                 extension='.txt')
-        with io.open(self.file_name, "w+") as fh:
-            fh.write(unicode("some text"))
+        self.file_names = []
+        for ii in range(3):
+            file_name = self.workspace.get_file(parent_dir=self.subdirectory,
+                                                extension='.txt')
+            with io.open(file_name, "w+") as fh:
+                fh.write(unicode("some text ") + unicode(ii))
+            self.file_names.append(file_name)
 
     def tearDown(self):
         self.workspace.cleanup()
@@ -483,16 +486,65 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         """Trivial test to make sure setUp and tearDown work."""
         pass
 
+    def test_process_subdirectory_dry_run(self):
+        """Check that ommiting -w option does not change the files."""
+        output = io.StringIO()
+        processed_files = massedit.edit_files(\
+                ["*.txt"], expressions=["re.sub('text', 'blah blah', line)"],
+                start_dirs=self.workspace.top_dir, output=output)
+        self.assertEqual(sorted(processed_files), sorted(self.file_names))
+        index = {}
+        for ii, file_name in enumerate(self.file_names):
+            with io.open(file_name) as fh:
+                new_lines = fh.readlines()
+            self.assertEqual(new_lines, ["some text " + unicode(ii)])
+            index[file_name] = ii
+        actual = output.getvalue()
+        expected = "".join([textwrap.dedent("""\
+                            --- {}
+                            +++ <new>
+                            @@ -1 +1 @@
+                            -some text {}+some blah blah {}""").format(\
+                                    file_name, index[file_name],
+                                    index[file_name])
+                            for file_name in processed_files])
+        self.assertEqual(actual, expected)
+
+    def test_process_subdirectory_dry_run_with_one_change(self):
+        """Check that ommiting -w option does not change the files."""
+        output = io.StringIO()
+        processed_files = massedit.edit_files(\
+                ["*.txt"], expressions=["re.sub('text 1', 'blah blah 1', line)"],
+                start_dirs=self.workspace.top_dir, output=output)
+        self.assertEqual(processed_files, self.file_names[1:2])
+        index = {}
+        for ii, file_name in enumerate(self.file_names):
+            with io.open(file_name) as fh:
+                new_lines = fh.readlines()
+            self.assertEqual(new_lines, ["some text " + unicode(ii)])
+            index[file_name] = ii
+        actual = output.getvalue()
+        expected = "".join([textwrap.dedent("""\
+                            --- {}
+                            +++ <new>
+                            @@ -1 +1 @@
+                            -some text {}+some blah blah {}""").format(\
+                                    file_name, index[file_name],
+                                    index[file_name])
+                            for file_name in processed_files])
+        self.assertEqual(actual, expected)
+
     def test_process_subdirectory(self):
         """Check that the editor works correctly in subdirectories."""
         arguments = ["-r", "-s", self.workspace.top_dir, "-w",
                      "-e", "re.sub('text', 'blah blah', line)",
                      "*.txt"]
         processed_files = massedit.command_line(arguments)
-        self.assertEqual(processed_files, [self.file_name])
-        with io.open(self.file_name) as fh:
-            new_lines = fh.readlines()
-        self.assertEqual(new_lines, ["some blah blah"])
+        self.assertEqual(sorted(processed_files), sorted(self.file_names))
+        for ii, file_name in enumerate(self.file_names):
+            with io.open(file_name) as fh:
+                new_lines = fh.readlines()
+            self.assertEqual(new_lines, ["some blah blah " + unicode(ii)])
 
     def test_maxdepth_one(self):
         """Check that specifying -m 1 prevents modifiction to subdir."""
@@ -501,9 +553,10 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
                      "-m", "0", "*.txt"]
         processed_files = massedit.command_line(arguments)
         self.assertEqual(processed_files, [])
-        with io.open(self.file_name) as fh:
-            new_lines = fh.readlines()
-        self.assertEqual(new_lines, ["some text"])
+        for ii, file_name in enumerate(self.file_names):
+            with io.open(file_name) as fh:
+                new_lines = fh.readlines()
+            self.assertEqual(new_lines, ["some text " + unicode(ii)])
 
 
 class TestIsList(unittest.TestCase):

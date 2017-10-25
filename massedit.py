@@ -39,7 +39,7 @@ import subprocess
 import textwrap
 
 
-__version__ = '0.68.2'  # UPDATE setup.py when changing version.
+__version__ = '0.68.4'  # UPDATE setup.py when changing version.
 __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 
@@ -509,7 +509,7 @@ def edit_files(patterns, expressions=None,
                 # At this point, encoding is the input encoding.
                 diff = "".join(diffs)
                 if not diff:
-                    return
+                    continue
                 # The encoding of the target output may not match the input
                 # encoding. If it's defined, we round trip the diff text
                 # to bytes and back to silence any conversion errors.
