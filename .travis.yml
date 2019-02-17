@@ -1,5 +1,8 @@
 language: python
 
+# Required for Python 3.7
+dist: xenial 
+
 # When adding a version here, remember to change it in setup.py
 python:
     - "2.7"
@@ -7,6 +10,7 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
+    - "3.7"
 
 install:
     - python setup.py --quiet install
