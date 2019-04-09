@@ -111,6 +111,7 @@ class MassEdit(object):
         self._executables = []
         self.dry_run = None
         self.encoding = 'utf-8'
+        self.newline = '\n'
         if 'module' in kwds:
             self.import_module(kwds['module'])
         if 'code' in kwds:
@@ -123,6 +124,8 @@ class MassEdit(object):
             self.dry_run = kwds['dry_run']
         if 'encoding' in kwds:
             self.encoding = kwds['encoding']
+        if 'newline' in kwds:
+            self.newline = kwds['newline']
 
     @staticmethod
     def import_module(module):  # pylint: disable=R0201
@@ -236,7 +239,7 @@ class MassEdit(object):
                     raise FileExistsError(msg)
             try:
                 os.rename(file_name, bak_file_name)
-                with io.open(file_name, 'w', encoding=self.encoding) as new:
+                with io.open(file_name, 'w', encoding=self.encoding, newline=self.newline) as new:
                     new.writelines(to_lines)
                 # Keeps mode of original file.
                 shutil.copymode(bak_file_name, file_name)
@@ -380,6 +383,8 @@ def parse_command_line(argv):
                         help="generate input file suitable for -f option")
     parser.add_argument("--encoding", dest="encoding",
                         help="Encoding of input and output files")
+    parser.add_argument("--newline", dest="newline",
+                        help="Newline charachter for output files")
     parser.add_argument("patterns", metavar="pattern",
                         nargs="*",  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
@@ -464,7 +469,7 @@ def generate_fixer_file(output):
 def edit_files(patterns, expressions=None,
                functions=None, executables=None,
                start_dirs=None, max_depth=1, dry_run=True,
-               output=sys.stdout, encoding=None):
+               output=sys.stdout, encoding=None, newline=None):
     """Process patterns with MassEdit.
 
     Arguments:
@@ -492,7 +497,7 @@ def edit_files(patterns, expressions=None,
     if executables and not is_list(executables):
         raise TypeError("executables should be a list of program names")
 
-    editor = MassEdit(dry_run=dry_run, encoding=encoding)
+    editor = MassEdit(dry_run=dry_run, encoding=encoding, newline=newline)
     if expressions:
         editor.set_code_exprs(expressions)
     if functions:
@@ -543,7 +548,8 @@ def command_line(argv):
                        max_depth=arguments.max_depth,
                        dry_run=arguments.dry_run,
                        output=arguments.output,
-                       encoding=arguments.encoding)
+                       encoding=arguments.encoding,
+                       newline=arguments.newline)
     # If the output is not sys.stdout, we need to close it because
     # argparse.FileType does not do it for us.
     is_sys = arguments.output in [sys.stdout, sys.stderr]
