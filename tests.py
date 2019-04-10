@@ -326,6 +326,26 @@ class TestMassEditWithFile(unittest.TestCase):
         diffs = self.editor.edit_file(self.file_name)
         self.assertEqual(diffs, [])
 
+    def test_eol_setting(self):
+        """Check files with CRLF are created with LF when using newline setting"""
+        newline = '\n'
+        self.editor.newline = newline
+
+        content = "This is a line finishing with CRLF\r\n"
+
+        self.write_input_file(content)
+
+        def identity(lines, _):
+            """Return the line itself."""
+            for line in lines:
+                yield line
+
+        self.editor.append_function(identity)
+        diffs = self.editor.edit_file(self.file_name)
+
+        self.assertEqual(diffs, [])
+
+        # TODO: Check EOL of self.file_name before and after
 
 class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
 
