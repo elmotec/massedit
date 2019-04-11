@@ -111,7 +111,7 @@ class MassEdit(object):
         self._executables = []
         self.dry_run = None
         self.encoding = 'utf-8'
-        self.newline = '\n'
+        self.newline = None
         if 'module' in kwds:
             self.import_module(kwds['module'])
         if 'code' in kwds:
