@@ -326,10 +326,9 @@ class TestMassEditWithFile(unittest.TestCase):
         diffs = self.editor.edit_file(self.file_name)
         self.assertEqual(diffs, [])
 
-    def test_eol_setting(self):
+    def test_forcing_end_of_line_for_output_files(self):
         """Check files with CRLF are created with LF when using newline setting"""
-        newline = '\n'
-        self.editor.newline = newline
+        self.editor.newline = '\n'
 
         content = "This is a line finishing with CRLF\r\n"
 
@@ -345,7 +344,16 @@ class TestMassEditWithFile(unittest.TestCase):
 
         self.assertEqual(diffs, [])
 
-        # TODO: Check EOL of self.file_name before and after
+        with io.open(self.file_name) as f:
+            f.readline()
+            output_newline = f.newlines
+
+        expected_eol = self.editor.newline
+        if expected_eol is None:
+            # If not specified use the string to terminate lines on the current platform
+            expected_eol = os.linesep
+
+        self.assertEqual(expected_eol, output_newline)
 
 class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
 
