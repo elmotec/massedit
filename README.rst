@@ -192,7 +192,7 @@ The core was fleshed up a little, and here we are. If you find it useful and
 enhance it please, do not forget to submit patches. Thanks!
 
 If you are more interested in awk-like tool, you probably will find pyp_ a
-better alternative. This is certainly a more mature tool.
+better alternative.
 
 
 License
