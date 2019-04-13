@@ -89,7 +89,7 @@ expressions).
     -g FILE, --generate FILE
                           generate input file suitable for -f option
     --encoding ENCODING   Encoding of input and output files
-    --newline NEWLINE     Newline charachter for output files
+    --newline NEWLINE     Newline character for output files
 
   Examples:
   # Simple string substitution (-e). Will show a diff. No changes applied.
