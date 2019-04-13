@@ -6,17 +6,21 @@
     :target: https://pypi.python.org/pypi/massedit/
     :alt: Python compatibility
 
-.. image:: https://img.shields.io/travis/elmotec/massedit.svg
+.. image:: https://img.shields.io/travis/elmotec/massedit.svg?label=Travis
     :target: https://travis-ci.org/elmotec/massedit
     :alt: Travis status
 
-.. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg
+.. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg?label=AppVeyor
     :target: https://ci.appveyor.com/project/elmotec/massedit
     :alt: AppVeyor status
 
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
     :target: https://pypi.python.org/pypi/massedit
+
+.. image:: https://img.shields.io/librariesio/release/pypi/massedit.svg?label=libraries.io
+    :alt: Libraries.io dependency status for latest release
+    :target: https://libraries.io/pypi/massedit
 
 .. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg
     :target: https://coveralls.io/r/elmotec/massedit
