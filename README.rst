@@ -8,7 +8,11 @@
 
 .. image:: https://img.shields.io/travis/elmotec/massedit.svg
     :target: https://travis-ci.org/elmotec/massedit
-    :alt: Build Status
+    :alt: Travis status
+
+.. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg
+    :target: https://ci.appveyor.com/project/elmotec/massedit
+    :alt: AppVeyor status
 
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
@@ -18,9 +22,10 @@
     :target: https://coveralls.io/r/elmotec/massedit
     :alt: Coverage
 
-.. image:: https://api.codacy.com/project/badge/Grade/474b0af6853a4c5f8f9214d3220571f9
-    :target: https://www.codacy.com/app/elmotec/massedit?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=elmotec/massedit&amp;utm_campaign=Badge_Grade
+.. image:: https://img.shields.io/codacy/grade/474b0af6853a4c5f8f9214d3220571f9.svg
+    :target: https://www.codacy.com/app/elmotec/massedit/dashboard
     :alt: Codacy
+
 
 ========
 massedit
