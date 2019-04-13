@@ -89,6 +89,7 @@ expressions).
     -g FILE, --generate FILE
                           generate input file suitable for -f option
     --encoding ENCODING   Encoding of input and output files
+    --newline NEWLINE     Newline charachter for output files
 
   Examples:
   # Simple string substitution (-e). Will show a diff. No changes applied.
@@ -275,4 +276,3 @@ tgoodlet, https://github/tgoodlet
 .. _MIT License: http://en.wikipedia.org/wiki/MIT_License
 .. _autopep8: http://pypi.python.org/pypi/autopep8
 .. _Ned Batchelder's article: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
-
