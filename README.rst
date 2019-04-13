@@ -18,10 +18,6 @@
     :target: https://coveralls.io/r/elmotec/massedit
     :alt: Coverage
 
-.. image:: https://api.codacy.com/project/badge/Grade/dd4a11eb66674b3bbe518d8f829b6234
-    :target: https://www.codacy.com/app/elmotec/codemetrics?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=elmotec/codemetrics&amp;utm_campaign=Badge_Grade
-    :alt: Codacy
-
 .. image:: https://api.codacy.com/project/badge/Grade/474b0af6853a4c5f8f9214d3220571f9
     :target: https://www.codacy.com/app/elmotec/massedit?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=elmotec/massedit&amp;utm_campaign=Badge_Grade
     :alt: Codacy
