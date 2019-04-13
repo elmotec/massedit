@@ -3,7 +3,7 @@
 
 """A python bulk editor class to apply the same code to many files."""
 
-# Copyright (c) 2012-17 Jérôme Lecomte
+# Copyright (c) 2012-19 Jérôme Lecomte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ import subprocess
 import textwrap
 
 
-__version__ = '0.68.4'  # UPDATE setup.py when changing version.
+__version__ = '0.68.5'  # UPDATE setup.py when changing version.
 __author__ = 'Jérôme Lecomte'
 __license__ = 'MIT'
 
@@ -384,7 +384,7 @@ def parse_command_line(argv):
     parser.add_argument("--encoding", dest="encoding",
                         help="Encoding of input and output files")
     parser.add_argument("--newline", dest="newline",
-                        help="Newline charachter for output files")
+                        help="Newline character for output files")
     parser.add_argument("patterns", metavar="pattern",
                         nargs="*",  # argparse.REMAINDER,
                         help="shell-like file name patterns to process.")
