@@ -18,10 +18,7 @@
     :target: https://coveralls.io/r/elmotec/massedit
     :alt: Coverage
 
-.. image:: https://img.shields.io/codacy/474b0af6853a4c5f8f9214d3220571f9.svg
-    :target: https://www.codacy.com/app/elmotec/massedit/dashboard
-    :alt: Codacy
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/474b0af6853a4c5f8f9214d3220571f9)](https://www.codacy.com/app/elmotec/massedit?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=elmotec/massedit&amp;utm_campaign=Badge_Grade)
 
 ========
 massedit
