@@ -268,8 +268,9 @@ Changes
 Contributor acknowledgement
 ---------------------------
 
-Steven Myint, https://github.com/myint
-tgoodlet, https://github/tgoodlet
+[@Myint](https://github.com/myint), 
+[@tgoodlet](https://github.com/tgoodlet), 
+[@ALFNeT](https://github.com/ALFNeT)
 
 
 
