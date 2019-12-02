@@ -810,6 +810,15 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         mock_open.assert_called_with("fixer.py", "w+")
         mock_open().write.assert_called_with(massedit.fixer_template)
 
+    @mock.patch("massedit.readlines", return_value=["some example text"])
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
+    def test_from_stdin(self, stdout_, _):
+        """A simple dash reads input test from stdin."""
+        # Note that double quotes will be interpreted by Python below.
+        cmd = """massedit.py -e line.replace("text","test") -w -"""
+        massedit.command_line(cmd.split())
+        self.assertEqual("some example test", stdout_.getvalue())
+
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)

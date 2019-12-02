@@ -88,6 +88,15 @@ def get_function(fn_name):
     return current
 
 
+def readlines(input_):
+    """Return lines from input."""
+    try:
+        return input_.readlines()
+    except UnicodeDecodeError as err:
+        log.error("encoding error (see --encoding): %s", err)
+        raise
+
+
 class MassEdit(object):
 
     """Mass edit lines of files."""
@@ -190,6 +199,43 @@ class MassEdit(object):
                 raise  # Let the exception be handled at a higher level.
         return lines
 
+    def write_to(self, file_name, to_lines):
+        """Writes output lines to file."""
+        bak_file_name = file_name + ".bak"
+        if os.path.exists(bak_file_name):
+            msg = "{} already exists".format(bak_file_name)
+            if sys.version_info < (3, 3):
+                raise OSError(msg)
+            else:
+                # noinspection PyCompatibility
+                # pylint: disable=undefined-variable
+                raise FileExistsError(msg)
+        try:
+            os.rename(file_name, bak_file_name)
+            with io.open(
+                    file_name, "w", encoding=self.encoding, newline=self.newline
+            ) as new:
+                new.writelines(to_lines)
+            # Keeps mode of original file.
+            shutil.copymode(bak_file_name, file_name)
+        except Exception as err:
+            log.error("failed to write output to %s: %s", file_name, err)
+            # Try to recover...
+            try:
+                os.rename(bak_file_name, file_name)
+            except OSError as err:
+                log.error(
+                    "failed to restore %s from %s: %s",
+                    file_name,
+                    bak_file_name,
+                    err,
+                )
+            raise
+        try:
+            os.unlink(bak_file_name)
+        except OSError as err:
+            log.warning("failed to remove backup %s: %s", bak_file_name, err)
+
     def edit_file(self, file_name):
         """Edit file in place, returns a list of modifications (unified diff).
 
@@ -197,17 +243,16 @@ class MassEdit(object):
           file_name (str, unicode): The name of the file.
 
         """
-        with io.open(file_name, "r", encoding=self.encoding) as from_file:
-            try:
-                from_lines = from_file.readlines()
-            except UnicodeDecodeError as err:
-                log.error("encoding error (see --encoding): %s", err)
-                raise
+        if file_name == '-':
+            from_lines = readlines(sys.stdin)
+        else:
+            with io.open(file_name, "r", encoding=self.encoding) as from_file:
+                from_lines = readlines(from_file)
 
         if self._executables:
             nb_execs = len(self._executables)
             if nb_execs > 1:
-                log.warn("found %d executables. Will use first one", nb_execs)
+                log.warning("found %d executables. Will use first one", nb_execs)
             exec_list = self._executables[0].split()
             exec_list.append(file_name)
             try:
@@ -226,40 +271,10 @@ class MassEdit(object):
             from_lines, to_lines, fromfile=file_name, tofile="<new>"
         )
         if not self.dry_run:
-            bak_file_name = file_name + ".bak"
-            if os.path.exists(bak_file_name):
-                msg = "{} already exists".format(bak_file_name)
-                if sys.version_info < (3, 3):
-                    raise OSError(msg)
-                else:
-                    # noinspection PyCompatibility
-                    # pylint: disable=undefined-variable
-                    raise FileExistsError(msg)
-            try:
-                os.rename(file_name, bak_file_name)
-                with io.open(
-                    file_name, "w", encoding=self.encoding, newline=self.newline
-                ) as new:
-                    new.writelines(to_lines)
-                # Keeps mode of original file.
-                shutil.copymode(bak_file_name, file_name)
-            except Exception as err:
-                log.error("failed to write output to %s: %s", file_name, err)
-                # Try to recover...
-                try:
-                    os.rename(bak_file_name, file_name)
-                except OSError as err:
-                    log.error(
-                        "failed to restore %s from %s: %s",
-                        file_name,
-                        bak_file_name,
-                        err,
-                    )
-                raise
-            try:
-                os.unlink(bak_file_name)
-            except OSError as err:
-                log.warning("failed to remove backup %s: %s", bak_file_name, err)
+            if file_name == "-":
+                sys.stdout.writelines(to_lines)
+            else:
+                self.write_to(file_name, to_lines)
         return list(diffs)
 
     def append_code_expr(self, code):
@@ -466,6 +481,9 @@ def get_paths(patterns, start_dirs=None, max_depth=1):
     # Shortcut: if there is only one pattern, make sure we process just that.
     if len(patterns) == 1 and not start_dirs:
         pattern = patterns[0]
+        if pattern == '-':
+            yield pattern
+            return
         directory = os.path.dirname(pattern)
         if directory:
             patterns = [os.path.basename(pattern)]
@@ -545,8 +563,6 @@ def edit_files(
       expressions: single python expression to be applied line by line.
       functions: functions to process files contents.
       executables: os executables to execute on the argument files.
-
-    Keyword arguments:
       max_depth: maximum recursion level when looking for file matches.
       start_dirs: workspace(ies) where to start the file search.
       dry_run: only display differences if True. Save modified file otherwise.
