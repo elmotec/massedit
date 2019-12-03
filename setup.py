@@ -4,11 +4,18 @@
 """Packaging script."""
 
 import os
+import sys
 
 from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 readme = open(os.path.join(here, "README.rst")).read()
+
+if sys.version_info < (3, 3):
+    tests_require = ["mock"]
+else:
+    tests_require = []
+
 
 setup(
     name="massedit",
@@ -24,7 +31,7 @@ setup(
     long_description=readme,
     test_suite="tests",
     setup_requires=[],
-    tests_require=["mock"],
+    tests_require=tests_require,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
