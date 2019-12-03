@@ -39,11 +39,9 @@ import massedit
 
 if sys.version_info < (3, 3):
     import mock  # pylint: disable=import-error
-
     builtins = "__builtin__"
 else:
     from unittest import mock  # pylint: disable=import-error, no-name-in-module
-
     builtins = "builtins"
 
 
