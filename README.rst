@@ -217,6 +217,10 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.68.6 (2019-12-02)
+  Added support for Python 3.8, stdin input via - argument. Documented
+  regex to turn base classes into googlemock MOCK_METHOD.
+
 0.68.5 (2019-04-13)
   Added --newline option to force newline output. Thanks @ALFNeT!
 

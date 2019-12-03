@@ -36,7 +36,7 @@ import shutil
 import subprocess
 import sys
 
-__version__ = "0.68.5"  # UPDATE setup.py when changing version.
+__version__ = "0.68.6"  # UPDATE setup.py when changing version.
 __author__ = "Jérôme Lecomte"
 __license__ = "MIT"
 
