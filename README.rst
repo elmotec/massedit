@@ -64,50 +64,55 @@ expressions).
 
 ::
 
-  usage: massedit.py [-h] [-V] [-w] [-v] [-e EXPRESSIONS] [-f FUNCTIONS]
-                     [-x EXECUTABLES] [-s START_DIRS] [-m MAX_DEPTH] [-o output]
-                     pattern [pattern ...]
+    usage: massedit.py [-h] [-V] [-w] [-v] [-e EXPRESSIONS] [-f FUNCTIONS]
+                       [-x EXECUTABLES] [-s START_DIRS] [-m MAX_DEPTH] [-o FILE]
+                       [-g FILE] [--encoding ENCODING] [--newline NEWLINE]
+                       [file pattern [file pattern ...]]
 
-  Python mass editor
+    Python mass editor
 
-  positional arguments:
-    pattern               shell-like file name patterns to process.
+    positional arguments:
+      file pattern          shell-like file name patterns to process or - to read
+                            from stdin.
 
-  optional arguments:
-    -h, --help            show this help message and exit
-    -V, --version         show program's version number and exit
-    -w, --write           modify target file(s) in place. Shows diff otherwise.
-    -v, --verbose         increases log verbosity (can be specified multiple
-                          times)
-    -e EXPRESSIONS, --expression EXPRESSIONS
-                          Python expressions applied to target files. Use the
-                          line variable to reference the current line.
-    -f FUNCTIONS, --function FUNCTIONS
-                          Python function to apply to target file. Takes file
-                          content as input and yield lines. Specify function as
-                          [module]:?<function name>.
-    -x EXECUTABLES, --executable EXECUTABLES
-                          Python executable to apply to target file.
-    -s START_DIRS, --start START_DIRS
-                          Directory(ies) from which to look for targets.
-    -m MAX_DEPTH, --max-depth-level MAX_DEPTH
-                          Maximum depth when walking subdirectories.
-    -o FILE, --output FILE
-                          redirect output to a file
-    -g FILE, --generate FILE
-                          generate input file suitable for -f option
-    --encoding ENCODING   Encoding of input and output files
-    --newline NEWLINE     Newline character for output files
+    optional arguments:
+      -h, --help            show this help message and exit
+      -V, --version         show program's version number and exit
+      -w, --write           modify target file(s) in place. Shows diff otherwise.
+      -v, --verbose         increases log verbosity (can be specified multiple
+                            times)
+      -e EXPRESSIONS, --expression EXPRESSIONS
+                            Python expressions applied to target files. Use the
+                            line variable to reference the current line.
+      -f FUNCTIONS, --function FUNCTIONS
+                            Python function to apply to target file. Takes file
+                            content as input and yield lines. Specify function as
+                            [module]:?<function name>.
+      -x EXECUTABLES, --executable EXECUTABLES
+                            Python executable to apply to target file.
+      -s START_DIRS, --start START_DIRS
+                            Directory(ies) from which to look for targets.
+      -m MAX_DEPTH, --max-depth-level MAX_DEPTH
+                            Maximum depth when walking subdirectories.
+      -o FILE, --output FILE
+                            redirect output to a file
+      -g FILE, --generate FILE
+                            generate stub file suitable for -f option
+      --encoding ENCODING   Encoding of input and output files
+      --newline NEWLINE     Newline character for output files
 
-  Examples:
-  # Simple string substitution (-e). Will show a diff. No changes applied.
-  massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
+    Examples:
+    # Simple string substitution (-e). Will show a diff. No changes applied.
+    massedit.py -e "re.sub('failIf', 'assertFalse', line)" *.py
 
-  # File level modifications (-f). Overwrites the files in place (-w).
-  massedit.py -w -f fixer:main *.py
+    # File level modifications (-f). Overwrites the files in place (-w).
+    massedit.py -w -f fixer:fixit *.py
 
-  # Will change all test*.py in subdirectories of tests.
-  massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+    # Will change all test*.py in subdirectories of tests.
+    massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+
+    # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
+    massedit.py -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
 
 
 If massedit is installed as a package (from pypi for instance), one can interact with it as a command line tool:

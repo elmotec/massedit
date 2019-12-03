@@ -370,6 +370,9 @@ def parse_command_line(argv):
 
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+    
+    # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
+    {0} -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
     """
     ).format(os.path.basename(argv[0]))
     formatter_class = argparse.RawDescriptionHelpFormatter
@@ -447,7 +450,7 @@ def parse_command_line(argv):
         "--generate",
         metavar="FILE",
         type=str,
-        help="generate input file suitable for -f option",
+        help="generate stub file suitable for -f option",
     )
     parser.add_argument(
         "--encoding", dest="encoding", help="Encoding of input and output files"
@@ -457,9 +460,9 @@ def parse_command_line(argv):
     )
     parser.add_argument(
         "patterns",
-        metavar="pattern",
+        metavar="file pattern",
         nargs="*",  # argparse.REMAINDER,
-        help="shell-like file name patterns to process.",
+        help="shell-like file name patterns to process or - to read from stdin.",
     )
     arguments = parser.parse_args(argv[1:])
 
