@@ -112,7 +112,7 @@ expressions).
     massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
 
     # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
-    massedit.py -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
+    massedit.py -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" gmock_test.cpp
 
 
 If massedit is installed as a package (from pypi for instance), one can interact with it as a command line tool:
