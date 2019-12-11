@@ -532,7 +532,9 @@ def fixit(lines, file_name):
     '''
     changed_lines = []
     for lineno, line in enumerate(lines):
-        changed_lines.append(line)
+        # See https://regex101.com/?filterFlavors=python
+        changed_line = line.sub(pat, repl, line)
+        changed_lines.append(changed_line)
     return changed_lines
 
 
