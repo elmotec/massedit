@@ -36,7 +36,7 @@ import shutil
 import subprocess
 import sys
 
-__version__ = "0.69.0"  # UPDATE setup.cfg when changing version.
+__version__ = "0.69.1"  # UPDATE setup.cfg when changing version.
 __author__ = "Elmotec"
 __license__ = "MIT"
 
