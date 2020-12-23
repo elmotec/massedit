@@ -3,7 +3,7 @@
 
 """A python bulk editor class to apply the same code to many files."""
 
-# Copyright (c) 2012-19 Jérôme Lecomte
+# Copyright (c) 2012-21 Elmotec
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,8 @@ import shutil
 import subprocess
 import sys
 
-__version__ = "0.68.6"  # UPDATE setup.py when changing version.
-__author__ = "Jérôme Lecomte"
+__version__ = "0.69.0"  # UPDATE setup.cfg when changing version.
+__author__ = "Elmotec"
 __license__ = "MIT"
 
 
