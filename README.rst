@@ -6,9 +6,9 @@
     :target: https://pypi.python.org/pypi/massedit/
     :alt: Python compatibility
 
-.. image:: https://img.shields.io/travis/elmotec/massedit.svg?label=Travis
-    :target: https://travis-ci.org/elmotec/massedit
-    :alt: Travis status
+.. image:: https://img.shields.io/github/workflow/status/elmotec/massedit/Python%20application
+    :target: https://github.com/elmotec/massedit/actions?query=workflow%3A%22Python+application%22
+    :alt: GitHub Workflow Python application
 
 .. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg?label=AppVeyor
     :target: https://ci.appveyor.com/project/elmotec/massedit
