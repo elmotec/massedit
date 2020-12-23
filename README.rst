@@ -217,6 +217,11 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+0.69.0 (2020-12-22)
+  Updated infrastructure files to setup.cfg/pyproject.toml instead of
+  setup.py.  Also moved CI to github workflows from travis and added
+  regression tests for Python 2.7.
+
 0.68.6 (2019-12-02)
   Added support for Python 3.8, stdin input via - argument. Documented
   regex to turn base classes into googlemock MOCK_METHOD.
