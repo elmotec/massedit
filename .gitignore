@@ -9,6 +9,7 @@
 .project
 .pydevproject
 .travis-solo/
+.tox/
 build/
 dist/
 sdist/

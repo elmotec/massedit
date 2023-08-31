@@ -236,7 +236,7 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
 
     def test_syntax_error(self):
         """Check we get a SyntaxError if the code is not valid."""
-        with mock.patch("massedit.log", auto_spec=True):
+        with mock.patch("massedit.log", autospec=True):
             with self.assertRaises(SyntaxError):
                 self.editor.append_code_expr("invalid expression")
                 self.assertIsNone(self.editor.code_objs)
