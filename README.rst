@@ -217,6 +217,8 @@ Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 Changes
 -------
 
+See CHANGELOG.md for changes later than 0.69.0
+
 0.69.0 (2020-12-22)
   Updated infrastructure files to setup.cfg/pyproject.toml instead of
   setup.py.  Also moved CI to github workflows from travis and added
