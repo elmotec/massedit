@@ -1,7 +1,7 @@
 [project]
 name = "massedit"
 description = "Edit multiple files using Python text processing modules"
-version = "0.69.1"
+version = "0.70.0"
 authors = [{name = "elmotec", email = "elmotec@gmx.com"}]
 license = {text = "MIT"}
 keywords = [

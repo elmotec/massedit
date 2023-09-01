@@ -1,3 +1,10 @@
+## v0.70.0 (2023-08-31)
+
+### Fix
+
+- fix commitizen configuration
+- fix .github/workflows/python-app.yml (#18)
+
 ## v0.69.1 (2020-12-22)
 
 ## v0.69.0 (2020-12-22)
