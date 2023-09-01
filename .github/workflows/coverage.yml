@@ -1,0 +1,31 @@
+name: Coverage report
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python "3.x"
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.x"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install coverage .
+    - name: Generate coverage report
+      run: |
+        coverage erase
+        coverage run --branch tests.py
+        coverage xml massedit.py
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+# Codacy does not seem to support coverage.xml out of the box
+#   - name: Codacy Coverage Reporter
+#     uses: codacy/codacy-coverage-reporter-action@master
+#     with:
+#       project-token: ${{secrets.CODACY_PROJECT_TOKEN}}
