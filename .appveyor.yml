@@ -1,7 +1,5 @@
 environment:
     matrix:
-        - PYTHON: Python27
-        - PYTHON: Python34
         - PYTHON: Python35
         - PYTHON: Python36
         - PYTHON: Python37

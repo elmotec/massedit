@@ -18,8 +18,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Natural Language :: English",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
@@ -33,7 +31,7 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 urls = {Homepage = "http://github.com/elmotec/massedit"}
-requires-python = ">=2.7"
+requires-python = ">=3.5"
 
 [project.readme]
 file = "README.rst"
