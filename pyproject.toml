@@ -1,8 +1,78 @@
 [build-system]
-requires = [
-    "setuptools>=40.9.0",
-    "wheel",
+build-backend = '"setuptools.build_meta"'
+
+[project]
+name = "massedit"
+description = "Edit multiple files using Python text processing modules"
+# UPDATE massedit.py
+version = "0.69.1"
+authors = [{name = "elmotec", email = "elmotec@gmx.com"}]
+license = {text = "MIT"}
+keywords = ["sed editor stream python edit mass"]
+requires-dist = "setuptools"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Editors :: Text Processing",
+    "Topic :: Text Processing :: Filters",
+    "Topic :: Utilities",
+    "Intended Audience :: Developers",
 ]
-build-backend = "setuptools.build_meta"
+urls = {Homepage = "http://github.com/elmotec/massedit"}
+requires-python = ">=2.7"
 
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
 
+[tool]
+aliases = {}
+
+[tool.setuptools]
+packages = ["."]
+test-suite = "tests"
+include-package-data = false
+
+[tool.entry_points]
+console_scripts = """
+massedit=massedit:main"""
+
+[tool.bumpversion.file.setup.cfg]
+search = "version={current_version}"
+replace = "version={new_version}"
+
+[tool.bumpversion.file.massedit.py]
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.flake8]
+exclude = "docs"
+max-line-length = "119"
+
+[tool.isort]
+profile = "black"
+
+[tool.tox.tox]
+envlist = "py27, py36, py37, py38, py39"
+isolated_build = "True"
+
+[tool.testenv]
+deps = """
+--prefer-binary
+.
+pytest"""
+commands = "pytest tests.py"
