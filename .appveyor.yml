@@ -1,13 +1,23 @@
+# appveyor.yml - https://www.appveyor.com/docs/lang/python
+---
+image:
+  - Visual Studio 2019
+
 environment:
-    matrix:
-        - PYTHON: Python35
-        - PYTHON: Python36
-        - PYTHON: Python37
+  # https://devguide.python.org/versions
+  matrix:
+  - TOXENV: py38
+  - TOXENV: py39
+  - TOXENV: py310
+  - TOXENV: py311
+
+build: false
 
 install:
-    - C:\%PYTHON%\python.exe -m pip install .
-
-build: off
+  # - py --list
+  # - py -m pip install --upgrade pip
+  - py -m pip install tox
 
 test_script:
-    - C:\%PYTHON%\python.exe tests.py
+  - py -m tox
+
