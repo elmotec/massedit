@@ -219,9 +219,12 @@ Changes
 
 See CHANGELOG.md for changes later than 0.69.0
 
-0.69.0 (2020-12-22)
+0.69.1 (2023-09-10)
   Updated infrastructure files to setup.cfg/pyproject.toml instead of
-  setup.py.  Also moved CI to github workflows from travis and added
+  setup.py.  Thanks @isidroas.
+
+0.69.0 (2020-12-22)
+  Also moved CI to github workflows from travis and added
   regression tests for Python 2.7.
 
 0.68.6 (2019-12-02)
@@ -292,9 +295,10 @@ See CHANGELOG.md for changes later than 0.69.0
 Contributor acknowledgement
 ---------------------------
 
-https://github.com/myint, 
-https://github.com/tgoodlet, 
+https://github.com/myint
+https://github.com/tgoodlet
 https://github.com/ALFNeT
+https://github.com/isidroas
 
 
 
