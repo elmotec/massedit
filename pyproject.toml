@@ -1,8 +1,7 @@
 [project]
 name = "massedit"
 description = "Edit multiple files using Python text processing modules"
-# UPDATE massedit.py
-version = "0.69.1"
+version = "0.70.0"
 authors = [{name = "elmotec", email = "elmotec@gmx.com"}]
 license = {text = "MIT"}
 keywords = [
@@ -47,6 +46,14 @@ max-line-length = "119"
 
 [tool.isort]
 profile = "black"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "semver"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true
 
 [build-system]
 build-backend = "setuptools.build_meta"
