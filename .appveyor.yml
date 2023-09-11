@@ -1,15 +1,13 @@
 environment:
     matrix:
-        - PYTHON: Python27
-        - PYTHON: Python34
         - PYTHON: Python35
         - PYTHON: Python36
         - PYTHON: Python37
 
 install:
-    - C:\%PYTHON%\python.exe setup.py install
+    - C:\%PYTHON%\python.exe -m pip install .
 
 build: off
 
 test_script:
-    - C:\%PYTHON%\python.exe setup.py test
+    - C:\%PYTHON%\python.exe tests.py
