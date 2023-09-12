@@ -213,7 +213,7 @@ class MassEdit(object):
         try:
             os.rename(file_name, bak_file_name)
             with io.open(
-                    file_name, "w", encoding=self.encoding, newline=self.newline
+                file_name, "w", encoding=self.encoding, newline=self.newline
             ) as new:
                 new.writelines(to_lines)
             # Keeps mode of original file.
@@ -243,7 +243,7 @@ class MassEdit(object):
           file_name (str, unicode): The name of the file.
 
         """
-        if file_name == '-':
+        if file_name == "-":
             from_lines = readlines(sys.stdin)
         else:
             with io.open(file_name, "r", encoding=self.encoding) as from_file:
@@ -360,7 +360,7 @@ def parse_command_line(argv):
     import textwrap
 
     example = textwrap.dedent(
-        """
+        r"""
     Examples:
     # Simple string substitution (-e). Will show a diff. No changes applied.
     {0} -e "re.sub('failIf', 'assertFalse', line)" *.py
@@ -370,7 +370,7 @@ def parse_command_line(argv):
 
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
-    
+
     # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
     {0} -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
     """
@@ -484,7 +484,7 @@ def get_paths(patterns, start_dirs=None, max_depth=1):
     # Shortcut: if there is only one pattern, make sure we process just that.
     if len(patterns) == 1 and not start_dirs:
         pattern = patterns[0]
-        if pattern == '-':
+        if pattern == "-":
             yield pattern
             return
         directory = os.path.dirname(pattern)

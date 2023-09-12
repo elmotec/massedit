@@ -40,4 +40,3 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
         skip_existing: true
         verbose: true
-
