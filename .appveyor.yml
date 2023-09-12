@@ -20,4 +20,3 @@ install:
 
 test_script:
   - py -m tox
-

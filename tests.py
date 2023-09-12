@@ -39,9 +39,11 @@ import massedit
 
 if sys.version_info < (3, 3):
     import mock  # pylint: disable=import-error
+
     builtins = "__builtin__"
 else:
     from unittest import mock  # pylint: disable=import-error, no-name-in-module
+
     builtins = "builtins"
 
 
@@ -111,7 +113,7 @@ class Workspace:
         shutil.rmtree(self.top_dir)
 
     def get_base_name(self):
-        """Create a base """
+        """Create a base"""
         import binascii
 
         suffix = binascii.hexlify(os.urandom(4)).decode("ascii")

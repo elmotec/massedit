@@ -324,4 +324,3 @@ https://github.com/isidroas
 .. _autopep8: http://pypi.python.org/pypi/autopep8
 .. _Ned Batchelder's article: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
 .. _commitizen: https://commitizen-tools.github.io/commitizen/
-
