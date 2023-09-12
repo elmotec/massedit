@@ -16,7 +16,7 @@ build: false
 install:
   # - py --list
   # - py -m pip install --upgrade pip
-  - py -m pip install tox
+  - py -m pip install -e .[test]
 
 test_script:
   - py -m tox

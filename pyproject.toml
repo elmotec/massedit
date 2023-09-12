@@ -30,7 +30,7 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 urls = {Homepage = "http://github.com/elmotec/massedit"}
-requires-python = ">=3.5"
+requires-python = ">=2.7"  # not supported before min version in classifier.
 
 [project.readme]
 file = "README.rst"
@@ -39,13 +39,24 @@ content-type = "text/x-rst"
 [project.scripts]
 massedit='massedit:main'
 
+[project.optional-dependencies]
+test = [
+    "flake8",
+    "tox",
+]
 
-[tool.flake8]
-exclude = "docs"
-max-line-length = "119"
+develop = [
+    "black",
+    "commitizen",
+    "flake8",
+    "pre-commit",
+    "pylint",
+    "tox",
+]
 
-[tool.isort]
-profile = "black"
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.2"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -55,6 +66,13 @@ version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
 
-[build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    envlist = py3{7,8,9,10,11}
+    isolated_build = True
+
+    [testenv]
+    description = Unit tests
+    commands = python tests.py
+"""

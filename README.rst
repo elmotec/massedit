@@ -142,7 +142,7 @@ Download ``massedit.py`` from ``http://github.com/elmotec/massedit`` or :
 
 ::
 
-  pip install massedit
+  python -m pip install massedit
 
 
 Poor man source-to-source manipulation
@@ -207,6 +207,21 @@ enhance it please, do not forget to submit patches. Thanks!
 If you are more interested in awk-like tool, you probably will find pyp_ a
 better alternative.
 
+
+Contributing
+------------
+
+To set things up for development, the easiest is to pip-install the develop
+extra configuration:
+
+::
+
+    python -m venv venv
+    . venv/bin/activate
+    python -m pip install -e .[develop]
+
+
+The best is to use commitizen_ when performing commits.
 
 License
 -------
@@ -308,3 +323,5 @@ https://github.com/isidroas
 .. _MIT License: http://en.wikipedia.org/wiki/MIT_License
 .. _autopep8: http://pypi.python.org/pypi/autopep8
 .. _Ned Batchelder's article: http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
+.. _commitizen: https://commitizen-tools.github.io/commitizen/
+
