@@ -783,7 +783,7 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         output = io.StringIO()
         execname = "head -1"
         if platform.system() == "Windows":
-            execname = "powershell -c gc -head 1"
+            execname = "powershell -NoProfile -c gc -head 1"
         next(massedit.get_paths(["tests.py"]))
         massedit.edit_files(["tests.py"], executables=[execname], output=output)
         actual = output.getvalue().split("\n")
