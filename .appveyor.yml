@@ -3,4 +3,4 @@ image: Visual Studio 2022
 build_script:
 - ps: py -m pip install -e .
 test_script:
-- ps: py tests.py -v
+- ps: C:\Python313-x64\python.exe tests.py -v
