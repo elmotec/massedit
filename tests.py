@@ -23,8 +23,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import unicode_literals
-
 import io
 import logging
 import os
@@ -37,23 +35,12 @@ import unittest
 
 import massedit
 
-if sys.version_info < (3, 3):
-    import mock  # pylint: disable=import-error
+from unittest import mock  # pylint: disable=import-error, no-name-in-module
 
-    builtins = "__builtin__"
-else:
-    from unittest import mock  # pylint: disable=import-error, no-name-in-module
-
-    builtins = "builtins"
+builtins = "builtins"
 
 
-try:
-    unicode
-except NameError:
-    unicode = str  # pylint: disable=invalid-name, redefined-builtin
-
-
-zen = unicode(
+zen = str(
     """The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
@@ -285,7 +272,7 @@ class TestMassEditWithFile(unittest.TestCase):
     def setUp(self):
         self.editor = massedit.MassEdit()
         self.workspace = Workspace()
-        self.file_name = os.path.join(self.workspace.top_dir, unicode("somefile.txt"))
+        self.file_name = os.path.join(self.workspace.top_dir, str("somefile.txt"))
 
     def tearDown(self):
         """Remove the temporary file."""
@@ -305,7 +292,7 @@ class TestMassEditWithFile(unittest.TestCase):
     def test_non_utf8_with_utf8_setting(self):
         """Check files with non-utf8 characters are skipped with a warning."""
         log_sink = LogInterceptor(massedit.log)
-        content = unicode("This is ok\nThis \u00F1ot")
+        content = str("This is ok\nThis \u00F1ot")
         self.write_input_file(content, encoding="cp1252")
 
         def identity(lines, _):
@@ -322,7 +309,7 @@ class TestMassEditWithFile(unittest.TestCase):
         """Check files with non-utf8 characters are skipped with a warning."""
         encoding = "cp1252"
         self.editor.encoding = encoding
-        content = unicode("This is ok\nThis \u00F1ot")
+        content = str("This is ok\nThis \u00F1ot")
         self.write_input_file(content, encoding=encoding)
 
         def identity(lines, _):
@@ -548,7 +535,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
                 parent_dir=self.subdirectory, extension=".txt"
             )
             with io.open(file_name, "w+") as fh:
-                fh.write(unicode("some text ") + unicode(ii))
+                fh.write(str("some text ") + str(ii))
             self.file_names.append(file_name)
 
     def tearDown(self):
@@ -572,7 +559,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         for ii, file_name in enumerate(self.file_names):
             with io.open(file_name) as fh:
                 new_lines = fh.readlines()
-            self.assertEqual(new_lines, ["some text " + unicode(ii)])
+            self.assertEqual(new_lines, ["some text " + str(ii)])
             index[file_name] = ii
         actual = output.getvalue()
         expected = "".join(
@@ -603,7 +590,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         for ii, file_name in enumerate(self.file_names):
             with io.open(file_name) as fh:
                 new_lines = fh.readlines()
-            self.assertEqual(new_lines, ["some text " + unicode(ii)])
+            self.assertEqual(new_lines, ["some text " + str(ii)])
             index[file_name] = ii
         actual = output.getvalue()
         expected = "".join(
@@ -636,7 +623,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         for ii, file_name in enumerate(self.file_names):
             with io.open(file_name) as fh:
                 new_lines = fh.readlines()
-            self.assertEqual(new_lines, ["some blah blah " + unicode(ii)])
+            self.assertEqual(new_lines, ["some blah blah " + str(ii)])
 
     def test_maxdepth_one(self):
         """Check that specifying -m 1 prevents modifiction to subdir."""
@@ -656,7 +643,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         for ii, file_name in enumerate(self.file_names):
             with io.open(file_name) as fh:
                 new_lines = fh.readlines()
-            self.assertEqual(new_lines, ["some text " + unicode(ii)])
+            self.assertEqual(new_lines, ["some text " + str(ii)])
 
 
 class TestIsList(unittest.TestCase):
@@ -677,7 +664,7 @@ class TestIsList(unittest.TestCase):
 
     def test_unicode_string_not_ok(self):
         """String should not be confused with lists"""
-        self.assertFalse(massedit.is_list(unicode("test")))
+        self.assertFalse(massedit.is_list(str("test")))
 
 
 class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
