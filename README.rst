@@ -211,17 +211,17 @@ better alternative.
 Contributing
 ------------
 
-To set things up for development, the easiest is to pip-install the develop
-extra configuration:
+To set things up for development, please pip-install massedit as shown below.
+It will install it in editable mode and the develop extra packages, including
+commitizen that is recommended to have commits follow conventional commits
+convention:
 
 ::
 
     python -m venv venv
     . venv/bin/activate
-    python -m pip install -e .[develop]
+    python -m pip install -e .[develop,test]
 
-
-The best is to use commitizen_ when performing commits.
 
 License
 -------
