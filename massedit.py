@@ -90,7 +90,6 @@ def readlines(input_):
 
 
 class MassEdit(object):
-
     """Mass edit lines of files."""
 
     def __init__(self, **kwds):
