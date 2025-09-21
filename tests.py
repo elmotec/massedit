@@ -257,7 +257,7 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
         actual_file = list(self.editor.edit_content(original_file, "filename"))
         expected_file = original_file
         expected_file[15] = (
-            "Although that way may not be obvious " "at first unless you're Guido."
+            "Although that way may not be obvious at first unless you're Guido."
         )
         self.editor.max_diff = None
         self.assertEqual(actual_file, expected_file)
