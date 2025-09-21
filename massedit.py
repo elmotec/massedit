@@ -34,7 +34,7 @@ import shutil
 import subprocess
 import sys
 
-__version__ = "0.70.1"
+__version__ = "0.71.0"
 __author__ = "Elmotec"
 __license__ = "MIT"
 
