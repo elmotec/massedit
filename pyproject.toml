@@ -45,6 +45,7 @@ develop = [
     "flake8",
     "pre-commit",
     "pylint",
+    "pytest",
 ]
 
 [build-system]

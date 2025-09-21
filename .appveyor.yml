@@ -8,4 +8,5 @@ build_script:
     & "C:\${Env:PYTHON}\python.exe" -m pip install -e .
 test_script:
 - ps: >-
-    & "C:\${Env:PYTHON}\python.exe" tests.py -v
+    $env:Path += ";C:\${Env:PYTHON}\Scripts"
+    & pytest.exe tests.py -vv --junitxml=TestResults.xml
