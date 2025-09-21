@@ -17,11 +17,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development",
     "Topic :: Software Development :: Code Generators",
     "Topic :: Text Editors :: Text Processing",
@@ -30,7 +29,7 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 urls = {Homepage = "http://github.com/elmotec/massedit"}
-requires-python = ">=2.7"  # not supported before min version in classifier.
+requires-python = ">=3.10"
 
 [project.readme]
 file = "README.rst"
@@ -40,18 +39,13 @@ content-type = "text/x-rst"
 massedit='massedit:main'
 
 [project.optional-dependencies]
-test = [
-    "flake8",
-    "tox",
-]
-
 develop = [
     "black",
     "commitizen",
     "flake8",
     "pre-commit",
     "pylint",
-    "tox",
+    "pytest",
 ]
 
 [build-system]
@@ -65,14 +59,3 @@ version_scheme = "semver"
 version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
-
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    envlist = py3{7,8,9,10,11}
-    isolated_build = True
-
-    [testenv]
-    description = Unit tests
-    commands = python tests.py
-"""
