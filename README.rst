@@ -6,9 +6,9 @@
     :target: https://pypi.python.org/pypi/massedit/
     :alt: Python compatibility
 
-.. image:: https://img.shields.io/github/workflow/status/elmotec/massedit/Python%20application
-    :target: https://github.com/elmotec/massedit/actions?query=workflow%3A%22Python+application%22
-    :alt: GitHub Workflow Python application
+.. image:: https://img.shields.io/github/actions/workflow/status/elmotec/massedit/python-app.yml
+   :target: https://github.com/elmotec/massedit/actions/workflows/python-app.yml
+   :alt: GitHub Actions Workflow Status
 
 .. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg?label=AppVeyor
     :target: https://ci.appveyor.com/project/elmotec/massedit
@@ -21,14 +21,6 @@
 .. image:: https://img.shields.io/librariesio/release/pypi/massedit.svg?label=libraries.io
     :alt: Libraries.io dependency status for latest release
     :target: https://libraries.io/pypi/massedit
-
-.. image:: https://coveralls.io/repos/elmotec/massedit/badge.svg
-    :target: https://coveralls.io/r/elmotec/massedit
-    :alt: Coverage
-
-.. image:: https://img.shields.io/codacy/grade/474b0af6853a4c5f8f9214d3220571f9.svg
-    :target: https://www.codacy.com/app/elmotec/massedit/dashboard
-    :alt: Codacy
 
 
 ========
