@@ -1,7 +1,7 @@
 [project]
 name = "massedit"
 description = "Edit multiple files using Python text processing modules"
-version = "0.70.0"
+version = "0.70.1"
 authors = [{name = "elmotec", email = "elmotec@gmx.com"}]
 license = {text = "MIT"}
 keywords = [
@@ -57,5 +57,8 @@ name = "cz_conventional_commits"
 tag_format = "v$version"
 version_scheme = "semver"
 version_provider = "pep621"
-update_changelog_on_bump = true
 major_version_zero = true
+version_files = [
+    "pyproject.toml:version",
+    "massedit.py:__version__",
+]
