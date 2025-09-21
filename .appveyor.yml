@@ -1,15 +1,6 @@
+version: 1.0.{build}
 image: Visual Studio 2022
-
-build: off
-
-init:
-  - echo "=== STARTING APPVEYOR BUILD ==="
-  - python --version
-
-install:
-  - echo "=== INSTALLING ==="
-  - python -m pip install -e .
-
+build_script:
+- ps: py -m pip install -e .
 test_script:
-  - echo "=== TESTING ==="
-  - python tests.py -v
+- ps: py tests.py -v
