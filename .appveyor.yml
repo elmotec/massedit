@@ -1,12 +1,7 @@
 version: 1.0.{build}
 image: Visual Studio 2022
 environment:
-  matrix:
-  - PYTHON: Python39-x64
-  - PYTHON: Python310-x64
-  - PYTHON: Python311-x64
-  - PYTHON: Python312-x64
-  - PYTHON: Python313-x64
+- PYTHON: Python313-x64
 build_script:
 - ps: >-
     $env:Path += ";C:\${Env:PYTHON}\Scripts"
