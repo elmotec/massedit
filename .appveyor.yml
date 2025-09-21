@@ -10,4 +10,5 @@ build_script:
 test_script:
 - ps: >-
     $env:Path += ";C:\${Env:PYTHON}\Scripts"
+    # use pytest because appveyor triggers error when anything goes to stderr
     & pytest.exe tests.py -v --junitxml=results.xml
