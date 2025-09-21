@@ -1,22 +1,31 @@
 # appveyor.yml - https://www.appveyor.com/docs/lang/python
 ---
 image:
-  - Visual Studio 2019
+  - Visual Studio 2022
 
 environment:
-  # https://devguide.python.org/versions
   matrix:
-  - TOXENV: py310
-  - TOXENV: py311
-  - TOXENV: py312
-  - TOXENV: py313
+    - WINPYTHON: "Python310"
+    - WINPYTHON: "Python311"
+    - WINPYTHON: "Python312"
+    - WINPYTHON: "Python313"
 
-build: false
+# Debug environment information
+init:
+  - echo "Python environment info:"
+  - C:\\%WINPYTHON%\\python.exe --version
+  - echo "Environment variables:"
+  - set | findstr WINPYTHON
+
+build: off
+
+build_script:
+  - echo "No build step required for Python project"
 
 install:
-  # - py --list
-  # - py -m pip install --upgrade pip
-  - py -m pip install -e .[test]
+  - C:\\%WINPYTHON%\\python.exe --version
+  - C:\\%WINPYTHON%\\python.exe -m pip install --upgrade pip --verbose
+  - C:\\%WINPYTHON%\\python.exe -m pip install -e .[develop] --verbose
 
 test_script:
-  - py -m tox
+  - C:\\%WINPYTHON%\\python.exe tests.py -v

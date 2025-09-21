@@ -39,18 +39,12 @@ content-type = "text/x-rst"
 massedit='massedit:main'
 
 [project.optional-dependencies]
-test = [
-    "flake8",
-    "tox",
-]
-
 develop = [
     "black",
     "commitizen",
     "flake8",
     "pre-commit",
     "pylint",
-    "tox",
 ]
 
 [build-system]
@@ -64,14 +58,3 @@ version_scheme = "semver"
 version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
-
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    envlist = py3{10,11,12,13}
-    isolated_build = True
-
-    [testenv]
-    description = Unit tests
-    commands = python tests.py
-"""
