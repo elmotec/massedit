@@ -1,31 +1,15 @@
-# appveyor.yml - https://www.appveyor.com/docs/lang/python
----
-image:
-  - Visual Studio 2022
-
-environment:
-  matrix:
-    - WINPYTHON: "Python310"
-    - WINPYTHON: "Python311"
-    - WINPYTHON: "Python312"
-    - WINPYTHON: "Python313"
-
-# Debug environment information
-init:
-  - echo "Python environment info:"
-  - C:\\%WINPYTHON%\\python.exe --version
-  - echo "Environment variables:"
-  - set | findstr WINPYTHON
+image: Visual Studio 2022
 
 build: off
 
-build_script:
-  - echo "No build step required for Python project"
+init:
+  - echo "=== STARTING APPVEYOR BUILD ==="
+  - python --version
 
 install:
-  - C:\\%WINPYTHON%\\python.exe --version
-  - C:\\%WINPYTHON%\\python.exe -m pip install --upgrade pip --verbose
-  - C:\\%WINPYTHON%\\python.exe -m pip install -e .[develop] --verbose
+  - echo "=== INSTALLING ==="
+  - python -m pip install -e .
 
 test_script:
-  - C:\\%WINPYTHON%\\python.exe tests.py -v
+  - echo "=== TESTING ==="
+  - python tests.py -v
