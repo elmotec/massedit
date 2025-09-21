@@ -803,9 +803,6 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
     try:
-        #
-        unittest.main(
-            argv=sys.argv, testRunner=unittest.TextTestRunner(stream=sys.stdout)
-        )
+        unittest.main(argv=sys.argv)
     finally:
         logging.shutdown()
