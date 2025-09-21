@@ -1,6 +1,12 @@
 version: 1.0.{build}
 image: Visual Studio 2022
+environment:
+  matrix:
+  - PYTHON: Python313-x64
 build_script:
-- ps: C:\Python313-x64\python.exe -m pip install -e .
+- ps: >-
+    $env:Path += ";C:\${Env:PYTHON}\Scripts"
+    & "C:\${Env:PYTHON}\python.exe" -m pip install -e .
 test_script:
-- ps: C:\Python313-x64\python.exe tests.py -v
+- ps: >-
+    & "C:\${Env:PYTHON}\python.exe" tests.py -v
