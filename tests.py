@@ -195,7 +195,6 @@ def remove_module(module_name):
 
 
 class TestGetFunction(unittest.TestCase):  # pylint: disable=R0904
-
     """Test the functon get_function."""
 
     def test_simple_retrieval(self):
@@ -206,7 +205,6 @@ class TestGetFunction(unittest.TestCase):  # pylint: disable=R0904
 
 
 class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
-
     """Test the massedit module."""
 
     def setUp(self):
@@ -272,14 +270,13 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
         actual_file = list(self.editor.edit_content(original_file, "filename"))
         expected_file = original_file
         expected_file[15] = (
-            "Although that way may not be obvious " "at first unless you're Guido."
+            "Although that way may not be obvious at first unless you're Guido."
         )
         self.editor.max_diff = None
         self.assertEqual(actual_file, expected_file)
 
 
 class TestMassEditWithFile(unittest.TestCase):
-
     """Test massedit with an actual file."""
 
     def setUp(self):
@@ -305,7 +302,7 @@ class TestMassEditWithFile(unittest.TestCase):
     def test_non_utf8_with_utf8_setting(self):
         """Check files with non-utf8 characters are skipped with a warning."""
         log_sink = LogInterceptor(massedit.log)
-        content = unicode("This is ok\nThis \u00F1ot")
+        content = unicode("This is ok\nThis \u00f1ot")
         self.write_input_file(content, encoding="cp1252")
 
         def identity(lines, _):
@@ -322,7 +319,7 @@ class TestMassEditWithFile(unittest.TestCase):
         """Check files with non-utf8 characters are skipped with a warning."""
         encoding = "cp1252"
         self.editor.encoding = encoding
-        content = unicode("This is ok\nThis \u00F1ot")
+        content = unicode("This is ok\nThis \u00f1ot")
         self.write_input_file(content, encoding=encoding)
 
         def identity(lines, _):
@@ -365,7 +362,6 @@ class TestMassEditWithFile(unittest.TestCase):
 
 
 class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
-
     """Test the command line interface of massedit.py with actual file."""
 
     def setUp(self):
@@ -536,7 +532,6 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
 
 
 class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
-
     """Test recursion when processing files."""
 
     def setUp(self):
@@ -660,7 +655,6 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
 
 
 class TestIsList(unittest.TestCase):
-
     """Test the is_list function."""
 
     def test_single_element_list(self):
@@ -681,7 +675,6 @@ class TestIsList(unittest.TestCase):
 
 
 class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
-
     """Test handing of command line arguments."""
 
     def test_parse_expression(self):

@@ -98,7 +98,6 @@ def readlines(input_):
 
 
 class MassEdit(object):
-
     """Mass edit lines of files."""
 
     def __init__(self, **kwds):
@@ -390,7 +389,7 @@ def parse_command_line(argv):
         dest="dry_run",
         action="store_false",
         default=True,
-        help="modify target file(s) in place. " "Shows diff otherwise.",
+        help="modify target file(s) in place. Shows diff otherwise.",
     )
     parser.add_argument(
         "-v",
@@ -398,7 +397,7 @@ def parse_command_line(argv):
         dest="verbose_count",
         action="count",
         default=0,
-        help="increases log verbosity (can be specified " "multiple times)",
+        help="increases log verbosity (can be specified multiple times)",
     )
     parser.add_argument(
         "-e",
