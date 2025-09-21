@@ -23,8 +23,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import unicode_literals
-
 import argparse
 import difflib
 import fnmatch
@@ -36,18 +34,12 @@ import shutil
 import subprocess
 import sys
 
-__version__ = "0.69.1"  # UPDATE setup.cfg when changing version.
+__version__ = "0.70.0"
 __author__ = "Elmotec"
 __license__ = "MIT"
 
 
 log = logging.getLogger(__name__)
-
-
-try:
-    unicode
-except NameError:
-    unicode = str  # pylint: disable=invalid-name, redefined-builtin
 
 
 def is_list(arg):
@@ -57,7 +49,7 @@ def is_list(arg):
     iterable.
 
     """
-    return iter(arg) and not isinstance(arg, unicode)
+    return iter(arg) and not isinstance(arg, str)
 
 
 def get_function(fn_name):
@@ -98,7 +90,6 @@ def readlines(input_):
 
 
 class MassEdit(object):
-
     """Mass edit lines of files."""
 
     def __init__(self, **kwds):
@@ -162,9 +153,9 @@ class MassEdit(object):
             log.error("cannot process line '%s' with %s", line, code)
             raise RuntimeError("failed to process line")
         elif isinstance(result, list) or isinstance(result, tuple):
-            line = unicode(" ".join([unicode(res_element) for res_element in result]))
+            line = str(" ".join([str(res_element) for res_element in result]))
         else:
-            line = unicode(result)
+            line = str(result)
         return line
 
     def edit_line(self, line):
@@ -204,12 +195,7 @@ class MassEdit(object):
         bak_file_name = file_name + ".bak"
         if os.path.exists(bak_file_name):
             msg = "{} already exists".format(bak_file_name)
-            if sys.version_info < (3, 3):
-                raise OSError(msg)
-            else:
-                # noinspection PyCompatibility
-                # pylint: disable=undefined-variable
-                raise FileExistsError(msg)
+            raise FileExistsError(msg)
         try:
             os.rename(file_name, bak_file_name)
             with io.open(
@@ -261,7 +247,7 @@ class MassEdit(object):
             except Exception as err:
                 log.error("failed to execute %s: %s", " ".join(exec_list), err)
                 raise  # Let the exception be handled at a higher level.
-            to_lines = output.split(unicode("\n"))
+            to_lines = output.split(str("\n"))
         else:
             to_lines = from_lines
 
@@ -280,9 +266,7 @@ class MassEdit(object):
     def append_code_expr(self, code):
         """Compile argument and adds it to the list of code objects."""
         # expects a string.
-        if isinstance(code, str) and not isinstance(code, unicode):
-            code = unicode(code)
-        if not isinstance(code, unicode):
+        if not isinstance(code, str):
             raise TypeError("string expected")
         log.debug("compiling code %s...", code)
         try:
@@ -318,9 +302,7 @@ class MassEdit(object):
           executable (str): os callable executable.
 
         """
-        if isinstance(executable, str) and not isinstance(executable, unicode):
-            executable = unicode(executable)
-        if not isinstance(executable, unicode):
+        if not isinstance(executable, str):
             raise TypeError(
                 "expected executable name as str, not {}".format(
                     executable.__class__.__name__

@@ -1,22 +1,13 @@
-# appveyor.yml - https://www.appveyor.com/docs/lang/python
----
-image:
-  - Visual Studio 2019
-
+version: 1.0.{build}
+image: Visual Studio 2022
 environment:
-  # https://devguide.python.org/versions
   matrix:
-  - TOXENV: py38
-  - TOXENV: py39
-  - TOXENV: py310
-  - TOXENV: py311
-
-build: false
-
-install:
-  # - py --list
-  # - py -m pip install --upgrade pip
-  - py -m pip install -e .[test]
-
+  - PYTHON: Python313-x64
+build_script:
+- ps: >-
+    $env:Path += ";C:\${Env:PYTHON}\Scripts"
+    & "C:\${Env:PYTHON}\python.exe" -m pip install -e .[develop]
 test_script:
-  - py -m tox
+- ps: >-
+    $env:Path += ";C:\${Env:PYTHON}\Scripts"
+    & pytest.exe tests.py -v --junitxml=results.xml
