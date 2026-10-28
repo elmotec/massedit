@@ -10,6 +10,24 @@ on:
     branches: [ "main" ]
 
 jobs:
+  windows-latest-python:
+    name: Windows / latest stable Python
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up latest stable Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.x'
+        check-latest: true
+        allow-prereleases: false
+    - name: Show Python version
+      run: python --version
+    - name: Test with unittest
+      run: python tests.py -v
+
   build:
 
     runs-on: ubuntu-latest
