@@ -1,3 +1,13 @@
+## Unreleased
+
+### BREAKING CHANGES
+
+- Minimum Python version is now 3.11; Python 3.10 is no longer supported.
+
+### Changed
+
+- Use Python 3.15 for development and publishing, and test Python 3.11–3.15 in CI.
+
 ## v0.71.0 (2025-09-21)
 
 ### BREAKING CHANGES
