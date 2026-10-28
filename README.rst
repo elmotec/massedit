@@ -10,10 +10,6 @@
    :target: https://github.com/elmotec/massedit/actions/workflows/python-app.yml
    :alt: GitHub Actions Workflow Status
 
-.. image:: https://img.shields.io/appveyor/ci/elmotec/massedit.svg?label=AppVeyor
-    :target: https://ci.appveyor.com/project/elmotec/massedit
-    :alt: AppVeyor status
-
 .. image:: https://img.shields.io/pypi/dm/massedit.svg
     :alt: PyPi
     :target: https://pypi.python.org/pypi/massedit
