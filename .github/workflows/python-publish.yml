@@ -15,7 +15,7 @@ jobs:
       contents: read    # minimal other permissions (you may trim more if possible)
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Set up Python
       uses: actions/setup-python@v6
