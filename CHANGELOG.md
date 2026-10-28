@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Use Python 3.15 for development and publishing, and test Python 3.11–3.15 in CI.
+- Use Python 3.15 for development, and test Python 3.11–3.15 in CI.
 
 ## v0.71.0 (2025-09-21)
 
