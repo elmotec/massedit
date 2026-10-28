@@ -199,6 +199,8 @@ better alternative.
 Contributing
 ------------
 
+Python 3.11 or later is required. Use Python 3.15 for development.
+
 To set things up for development, please pip-install massedit as shown below.
 It will install it in editable mode and the develop extra packages, including
 commitizen that is recommended to have commits follow conventional commits
