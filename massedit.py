@@ -505,9 +505,7 @@ def parse_command_line(argv):
         or arguments.executables
     ):
         if not arguments.patterns:
-            parser.error(
-                "--expression, --function, --generate or --executable missing"
-            )
+            parser.error("--expression, --function, --generate or --executable missing")
         action = arguments.patterns.pop(0)
         action_type = guess_action_type(action)
         if action_type is None:
