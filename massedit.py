@@ -308,6 +308,9 @@ class MassEdit(object):
         # expects a string.
         if not isinstance(code, str):
             raise TypeError("string expected")
+        if code in self.code_objs:
+            log.warning("ignoring duplicate expression %s", code)
+            return
         log.debug("compiling code %s...", code)
         try:
             code_obj = compile(code, "<string>", "eval")
@@ -372,6 +375,44 @@ class MassEdit(object):
             self.append_executable(exc)
 
 
+def read_expressions(file_name):
+    """Read Python expressions from a file, one per line.
+
+    Blank lines and lines starting with # are ignored.
+
+    Arguments:
+      file_name (str): name of the file holding the expressions.
+
+    Return:
+      list of expressions in the order they appear in the file.
+
+    """
+    with io.open(file_name, "r", encoding="utf-8") as expr_file:
+        lines = [line.strip() for line in expr_file]
+    return [line for line in lines if line and not line.startswith("#")]
+
+
+class ExpressionFileAction(argparse.Action):
+    """Add the expressions read from a file to the --expression list.
+
+    Sharing the destination keeps the expressions in the order they were
+    given on the command line, whether with --expression or from files.
+
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            expressions = read_expressions(values)
+        except (OSError, UnicodeDecodeError) as err:
+            raise argparse.ArgumentError(self, str(err)) from err
+        if not expressions:
+            raise argparse.ArgumentError(
+                self, "no expression found in {}".format(values)
+            )
+        current = getattr(namespace, self.dest) or []
+        setattr(namespace, self.dest, current + expressions)
+
+
 def parse_command_line(argv):
     """Parse command line argument. See -h option.
 
@@ -392,6 +433,10 @@ def parse_command_line(argv):
 
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+
+    # Several expressions are applied in the order they are given, here
+    # first from the command line, then from a file (one per line).
+    {0} -e "re.sub('failIf', 'assertFalse', line)" --expression-file fixes.txt *.py
 
     # Without -e, -f or -x, the first argument is guessed to be an
     # expression, a function or an executable (here an expression).
@@ -430,18 +475,31 @@ def parse_command_line(argv):
         "-e",
         "--expression",
         dest="expressions",
+        action="extend",
         nargs=1,
         help="Python expressions applied to target files. "
-        "Use the line variable to reference the current line.",
+        "Use the line variable to reference the current line. "
+        "Can be repeated: expressions are applied in order.",
+    )
+    parser.add_argument(
+        "--expression-file",
+        metavar="FILE",
+        dest="expressions",
+        action=ExpressionFileAction,
+        help="file with one Python expression per line, applied like "
+        "--expression. Blank lines and lines starting with # are ignored. "
+        "Can be repeated.",
     )
     parser.add_argument(
         "-f",
         "--function",
         dest="functions",
+        action="extend",
         nargs=1,
         help="Python function to apply to target file. "
         "Takes file content as input and yield lines. "
-        "Specify function as [module]:?<function name>.",
+        "Specify function as [module]:?<function name>. "
+        "Can be repeated: functions are applied in order.",
     )
     parser.add_argument(
         "-x",
@@ -608,8 +666,8 @@ def edit_files(
 
     Arguments:
       patterns: file pattern to identify the files to be processed.
-      expressions: single python expression to be applied line by line.
-      functions: functions to process files contents.
+      expressions: python expressions applied line by line, in order.
+      functions: functions to process files contents, in order.
       executables: os executables to execute on the argument files.
       max_depth: maximum recursion level when looking for file matches.
       start_dirs: workspace(ies) where to start the file search.

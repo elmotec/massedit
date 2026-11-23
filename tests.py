@@ -929,6 +929,140 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual("some example test", stdout_.getvalue())
 
 
+class TestMultipleExpressions(unittest.TestCase):
+    """Test several expressions and functions in a single run."""
+
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp_dir.cleanup)
+
+    def write_file(self, name, content):
+        """Write content to a file in the temporary directory."""
+        path = os.path.join(self.tmp_dir.name, name)
+        with io.open(path, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        return path
+
+    def parse_with_stderr(self, argv):
+        """Parse argv expecting an error, return what was printed."""
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            with self.assertRaises(SystemExit):
+                massedit.parse_command_line(argv)
+        return stderr.getvalue()
+
+    def test_repeated_expressions_are_kept(self):
+        """Each -e is kept, in the order given."""
+        argv = ["massedit.py", "-e", "line.upper()", "-e", "line.strip()", "f.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.expressions, ["line.upper()", "line.strip()"])
+
+    def test_repeated_functions_are_kept(self):
+        """Each -f is kept, in the order given."""
+        argv = ["massedit.py", "-f", "fix:one", "--function", "fix:two", "f.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.functions, ["fix:one", "fix:two"])
+
+    def test_read_expressions(self):
+        """Blank lines and comments are skipped, spaces are stripped."""
+        path = self.write_file(
+            "exprs.txt",
+            "# comment\nline.upper()\n\n   \n  line.strip()  \n  # indented\n",
+        )
+        actual = massedit.read_expressions(path)
+        self.assertEqual(actual, ["line.upper()", "line.strip()"])
+
+    def test_hash_inside_expression_is_kept(self):
+        """A # that does not start the line is part of the expression."""
+        path = self.write_file("exprs.txt", "line.replace('#', '//')\n")
+        actual = massedit.read_expressions(path)
+        self.assertEqual(actual, ["line.replace('#', '//')"])
+
+    def test_expression_file(self):
+        """--expression-file adds the expressions of the file."""
+        path = self.write_file("exprs.txt", "line.upper()\nline.strip()\n")
+        argv = ["massedit.py", "--expression-file", path, "f.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.expressions, ["line.upper()", "line.strip()"])
+        self.assertEqual(arguments.patterns, ["f.py"])
+
+    def test_expression_file_order_with_expressions(self):
+        """Expressions from -e and files keep the command line order."""
+        first = self.write_file("first.txt", "line.lower()\n")
+        second = self.write_file("second.txt", "line.title()\n")
+        argv = [
+            "massedit.py",
+            "-e",
+            "line.upper()",
+            "--expression-file",
+            first,
+            "-e",
+            "line.strip()",
+            "--expression-file",
+            second,
+            "f.py",
+        ]
+        arguments = massedit.parse_command_line(argv)
+        expected = ["line.upper()", "line.lower()", "line.strip()", "line.title()"]
+        self.assertEqual(arguments.expressions, expected)
+
+    def test_expression_file_missing(self):
+        """Error when the expression file does not exist."""
+        path = os.path.join(self.tmp_dir.name, "missing.txt")
+        argv = ["massedit.py", "--expression-file", path, "f.py"]
+        stderr = self.parse_with_stderr(argv)
+        self.assertIn("--expression-file", stderr)
+        self.assertIn("missing.txt", stderr)
+
+    def test_expression_file_empty(self):
+        """Error when the expression file has no expression.
+
+        Otherwise the first file pattern would be guessed as the action.
+
+        """
+        path = self.write_file("exprs.txt", "# only a comment\n\n")
+        argv = ["massedit.py", "--expression-file", path, "f.py"]
+        stderr = self.parse_with_stderr(argv)
+        self.assertIn("no expression found in", stderr)
+
+    def test_expressions_applied_in_order(self):
+        """Expressions are chained: each one sees the previous result."""
+        output = io.StringIO()
+        path = self.write_file("target.txt", "foo bar\n")
+        massedit.edit_files(
+            [path],
+            expressions=["line.replace('foo', 'bar')", "line.replace('bar', 'baz')"],
+            dry_run=False,
+            output=output,
+        )
+        with io.open(path, encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "baz baz\n")
+
+    @mock.patch("massedit.readlines", return_value=["some example text"])
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
+    def test_command_line_expression_file(self, stdout_, _):
+        """Expressions from -e and a file are all applied end to end."""
+        path = self.write_file("exprs.txt", "line.replace('example', 'sample')\n")
+        argv = [
+            "massedit.py",
+            "-e",
+            "line.replace('text', 'test')",
+            "--expression-file",
+            path,
+            "-w",
+            "-",
+        ]
+        massedit.command_line(argv)
+        self.assertEqual("some sample test", stdout_.getvalue())
+
+    def test_duplicate_expression_is_ignored(self):
+        """Same expression given twice is applied once, with a warning."""
+        log_sink = LogInterceptor(massedit.log)
+        editor = massedit.MassEdit()
+        editor.set_code_exprs(["line + 'x'", "line + 'x'"])
+        self.assertEqual(editor.edit_line("a"), "ax")
+        self.assertIn("ignoring duplicate expression line + 'x'", log_sink.log)
+
+
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
     try:
