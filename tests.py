@@ -683,11 +683,11 @@ class TestGuessActionType(unittest.TestCase):
         actual = massedit.guess_action_type("re.sub('a', 'b', line)")
         self.assertEqual(actual, "expressions")
 
-    def test_slice_is_not_a_function(self):
+    def test_slice_is_expression(self):
         """A colon in a slice does not make it a function."""
         self.assertEqual(massedit.guess_action_type("line[:10]"), "expressions")
 
-    def test_lambda_is_not_a_function(self):
+    def test_lambda_is_expression(self):
         """A colon in a lambda does not make it a function."""
         actual = massedit.guess_action_type("(lambda x: x.upper())(line)")
         self.assertEqual(actual, "expressions")
