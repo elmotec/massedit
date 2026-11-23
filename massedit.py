@@ -24,6 +24,7 @@
 # THE SOFTWARE.
 
 import argparse
+import ast
 import difflib
 import fnmatch
 import io
@@ -78,6 +79,45 @@ def get_function(fn_name):
     if code.co_argcount != 2:
         raise ValueError("function should take 2 arguments: lines, file_name")
     return current
+
+
+function_spec_re = re.compile(r"^[\w.]*:[\w.]+$")
+
+
+def guess_action_type(action):
+    """Guess whether action is an expression, a function or an executable.
+
+    Used when none of --expression, --function or --executable is given.
+    The rules are applied in order:
+
+    1. ``[module]:function`` (e.g. ``fixer:fixit``) is a function.
+    2. A Python expression that uses the ``line`` variable is an expression.
+    3. A command whose first word is found on the PATH is an executable.
+
+    Anything else (e.g. a file name passed by mistake) is left undetermined
+    so that the user gets an error rather than a surprising edit.
+
+    Arguments:
+      action (str): the expression, function or executable to classify.
+
+    Return:
+      "expressions", "functions", "executables" or None if undetermined.
+
+    """
+    if function_spec_re.match(action):
+        return "functions"
+    try:
+        tree = ast.parse(action, mode="eval")
+    except SyntaxError:
+        pass
+    else:
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        if "line" in names:
+            return "expressions"
+    words = action.split()
+    if words and shutil.which(words[0]):
+        return "executables"
+    return None
 
 
 def readlines(input_):
@@ -353,6 +393,10 @@ def parse_command_line(argv):
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
 
+    # Without -e, -f or -x, the first argument is guessed to be an
+    # expression, a function or an executable (here an expression).
+    {0} "re.sub('failIf', 'assertFalse', line)" *.py
+
     # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
     {0} -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
     """
@@ -444,9 +488,15 @@ def parse_command_line(argv):
         "patterns",
         metavar="file pattern",
         nargs="*",  # argparse.REMAINDER,
-        help="shell-like file name patterns to process or - to read from stdin.",
+        help="shell-like file name patterns to process or - to read from stdin. "
+        "If none of --expression, --function or --executable is given, the "
+        "first argument is used as one of them, guessing which it is.",
     )
-    arguments = parser.parse_args(argv[1:])
+    # Intermixed so options may follow a guessed expression, e.g. "expr" -w *.py
+    arguments = parser.parse_intermixed_args(argv[1:])
+
+    # Sets log level to WARN going more verbose for each new -V.
+    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
     if not (
         arguments.expressions
@@ -454,10 +504,21 @@ def parse_command_line(argv):
         or arguments.generate
         or arguments.executables
     ):
-        parser.error("--expression, --function, --generate or --executable missing")
+        if not arguments.patterns:
+            parser.error("--expression, --function, --generate or --executable missing")
+        action = arguments.patterns.pop(0)
+        action_type = guess_action_type(action)
+        if action_type is None:
+            parser.error(
+                "cannot tell if {!r} is an expression, a function or an "
+                "executable: use --expression, --function or "
+                "--executable".format(action)
+            )
+        if not arguments.patterns:
+            parser.error("file pattern missing")
+        log.info("using '%s' as %s", action, action_type[:-1])
+        setattr(arguments, action_type, [action])
 
-    # Sets log level to WARN going more verbose for each new -V.
-    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
 
 

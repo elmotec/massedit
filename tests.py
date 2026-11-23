@@ -661,6 +661,69 @@ class TestIsList(unittest.TestCase):
         self.assertFalse(massedit.is_list(str("test")))
 
 
+class TestGuessActionType(unittest.TestCase):
+    """Test guessing of expression, function or executable."""
+
+    def test_function_with_module(self):
+        """module:function is a function."""
+        self.assertEqual(massedit.guess_action_type("fixer:fixit"), "functions")
+
+    def test_function_with_dotted_module(self):
+        """package.module:function is a function."""
+        self.assertEqual(
+            massedit.guess_action_type("pkg.fixer:Fixer.fixit"), "functions"
+        )
+
+    def test_function_without_module(self):
+        """:function is a function."""
+        self.assertEqual(massedit.guess_action_type(":fixit"), "functions")
+
+    def test_expression_with_line(self):
+        """Python expression using line is an expression."""
+        actual = massedit.guess_action_type("re.sub('a', 'b', line)")
+        self.assertEqual(actual, "expressions")
+
+    def test_slice_is_expression(self):
+        """A colon in a slice does not make it a function."""
+        self.assertEqual(massedit.guess_action_type("line[:10]"), "expressions")
+
+    def test_lambda_is_expression(self):
+        """A colon in a lambda does not make it a function."""
+        actual = massedit.guess_action_type("(lambda x: x.upper())(line)")
+        self.assertEqual(actual, "expressions")
+
+    def test_bare_line_is_expression(self):
+        """line alone is an expression even if a line command exists."""
+        with mock.patch("shutil.which", return_value="/usr/bin/line"):
+            self.assertEqual(massedit.guess_action_type("line"), "expressions")
+
+    def test_executable_on_path(self):
+        """Command found on the PATH is an executable."""
+        with mock.patch("shutil.which", return_value="/usr/bin/sort") as which:
+            self.assertEqual(massedit.guess_action_type("sort -r"), "executables")
+        which.assert_called_once_with("sort")
+
+    def test_executable_with_invalid_syntax(self):
+        """Command that is not valid Python is an executable."""
+        with mock.patch("shutil.which", return_value="/usr/bin/black"):
+            actual = massedit.guess_action_type("black -q -")
+        self.assertEqual(actual, "executables")
+
+    def test_file_name_is_undetermined(self):
+        """File name passed by mistake is not taken for an expression."""
+        with mock.patch("shutil.which", return_value=None):
+            self.assertIsNone(massedit.guess_action_type("tests.py"))
+
+    def test_undetermined(self):
+        """Invalid Python not on the PATH cannot be classified."""
+        with mock.patch("shutil.which", return_value=None):
+            self.assertIsNone(massedit.guess_action_type("no-such-command 'arg'"))
+
+    def test_empty(self):
+        """Empty string cannot be classified."""
+        self.assertIsNone(massedit.guess_action_type(""))
+
+
 class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
     """Test handing of command line arguments."""
 
@@ -677,6 +740,72 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         argv = ["massedit.py", "--function", function_name, "tests.py"]
         arguments = massedit.parse_command_line(argv)
         self.assertEqual(arguments.functions, [function_name])
+
+    def test_parse_guessed_expression(self):
+        """Expression is guessed when no option is given."""
+        expr_name = "re.sub('Dutch', 'Guido', line)"
+        argv = ["massedit.py", expr_name, "tests.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.expressions, [expr_name])
+        self.assertIsNone(arguments.functions)
+        self.assertIsNone(arguments.executables)
+        self.assertEqual(arguments.patterns, ["tests.py"])
+
+    def test_parse_guessed_function(self):
+        """Function is guessed when no option is given."""
+        function_name = "tests:dutch_is_guido"
+        argv = ["massedit.py", function_name, "tests.py", "massedit.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.functions, [function_name])
+        self.assertIsNone(arguments.expressions)
+        self.assertEqual(arguments.patterns, ["tests.py", "massedit.py"])
+
+    def test_parse_guessed_executable(self):
+        """Executable is guessed when no option is given."""
+        execname = sys.executable + " -c pass"
+        argv = ["massedit.py", execname, "tests.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.executables, [execname])
+        self.assertIsNone(arguments.expressions)
+        self.assertEqual(arguments.patterns, ["tests.py"])
+
+    def test_parse_explicit_option_not_guessed(self):
+        """First argument is a file pattern when an option is given."""
+        argv = ["massedit.py", "-e", "line", "massedit.py", "tests.py"]
+        arguments = massedit.parse_command_line(argv)
+        self.assertEqual(arguments.expressions, ["line"])
+        self.assertEqual(arguments.patterns, ["massedit.py", "tests.py"])
+
+    def test_parse_guess_fails(self):
+        """Error when the first argument cannot be classified."""
+        argv = ["massedit.py", "not-a-command-or-expression(", "tests.py"]
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            with self.assertRaises(SystemExit):
+                massedit.parse_command_line(argv)
+        self.assertIn("cannot tell if", stderr.getvalue())
+
+    def test_parse_guess_without_pattern(self):
+        """Error when the guessed action is not followed by a file pattern."""
+        argv = ["massedit.py", "line.upper()"]
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            with self.assertRaises(SystemExit):
+                massedit.parse_command_line(argv)
+        self.assertIn("file pattern missing", stderr.getvalue())
+
+    def test_parse_nothing(self):
+        """Error when there is neither an option nor an argument."""
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            with self.assertRaises(SystemExit):
+                massedit.parse_command_line(["massedit.py"])
+        self.assertIn("missing", stderr.getvalue())
+
+    @mock.patch("massedit.readlines", return_value=["some example text"])
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
+    def test_guessed_expression_from_stdin(self, stdout_, _):
+        """Guessed expression is applied end to end."""
+        cmd = """massedit.py line.replace("text","test") -w -"""
+        massedit.command_line(cmd.split())
+        self.assertEqual("some example test", stdout_.getvalue())
 
     def test_exception_on_bad_patterns(self):
         """Check edit_files raises an error string instead of a list."""

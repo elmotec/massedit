@@ -61,7 +61,9 @@ expressions).
 
     positional arguments:
       file pattern          shell-like file name patterns to process or - to read
-                            from stdin.
+                            from stdin. If none of --expression, --function or
+                            --executable is given, the first argument is used as
+                            one of them, guessing which it is.
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -98,6 +100,10 @@ expressions).
 
     # Will change all test*.py in subdirectories of tests.
     massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+
+    # Without -e, -f or -x, the first argument is guessed to be an
+    # expression, a function or an executable (here an expression).
+    massedit.py "re.sub('failIf', 'assertFalse', line)" *.py
 
     # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
     massedit.py -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" gmock_test.cpp
