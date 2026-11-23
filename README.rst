@@ -227,82 +227,8 @@ License
 Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
 
 
-Changes
--------
-
-See CHANGELOG.md for changes later than 0.69.0
-
-0.69.1 (2023-09-10)
-  Updated infrastructure files to setup.cfg/pyproject.toml instead of
-  setup.py.  Thanks @isidroas.
-
-0.69.0 (2020-12-22)
-  Also moved CI to github workflows from travis and added
-  regression tests for Python 2.7.
-
-0.68.6 (2019-12-02)
-  Added support for Python 3.8, stdin input via - argument. Documented
-  regex to turn base classes into googlemock MOCK_METHOD.
-
-0.68.5 (2019-04-13)
-  Added --newline option to force newline output. Thanks @ALFNeT!
-
-0.68.4 (2017-10-24)
-  Fixed bug that would cause changes to be missed when the -w option is
-  ommited. Thanks @tgoodlet!
-
-0.68.3 (2017-09-20)
-  Added --generate option to quickly generate a fixer.py template file
-  to be modified to be used with -f fixer.fixit option. Added official
-  support for Python 3.6
-
-0.68.1 (2016-06-04)
-  Fixed encoding issues when processing non-ascii files.
-  Added --encoding option to force the value of the encoding if need be.
-  Listed support for Python 3.5
-
-0.67.1 (2015-06-28)
-  Documentation fixes.
-
-0.67 (2015-06-23)
-  Added file_name argument to processing functions.
-  Fixed incorrect closing of sys.stdout/stderr.
-  Improved diagnostic when the processing function does not take 2 arguments.
-  Swapped -v and -V option to be consistent with Python.
-  Pylint fixes.
-  Added support for Python 3.4.
-  Dropped support for Python 3.2.
-
-0.66 (2013-07-14)
-  Fixed lost executable bit with -f option (thanks myint).
-
-0.65 (2013-07-12)
-  Added -f option to execute code in a separate file/module. Added Travis continuous integration (thanks myint). Fixed python 2.7 support (thanks myint).
-
-0.64 (2013-06-01)
-  Fixed setup.py so that massedit installs as a script. Fixed eol issues (thanks myint).
-
-0.63 (2013-05-27)
-  Renamed to massedit. Previous version are still known as Python-Mass-Editor.
-
-0.62 (2013-04-11)
-  Fixed bug that caused an EditorError to be raised when the result of the
-  expression is an empty string.
-
-0.61 (2012-07-06)
-  Added massedit.edit_files function to ease usage as library instead of as
-  a command line tool (suggested by Maxim Veksler).
-
-0.60 (2012-07-04)
-  Treats arguments as patterns rather than files to ease processing of
-  multiple files in multiple subdirectories.  Added -s (start directory)
-  and -m (max depth) options.
-
-0.52 (2012-06-05)
-  Upgraded for python 3. Still compatible with python 2.7.
-
-0.51 (2012-05)
-  Initial release (Beta).
+See the `changelog <https://github.com/elmotec/massedit/blob/main/CHANGELOG.md>`_
+for release history.
 
 
 Contributor acknowledgement
