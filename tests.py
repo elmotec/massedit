@@ -27,7 +27,9 @@ import io
 import logging
 import os
 import platform
+import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -518,6 +520,97 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         self.assertEqual(statinfo.st_mode, mode)
 
 
+upper_script = """\
+import sys
+
+if len(sys.argv) > 1:
+    with open(sys.argv[1], "rb") as fh:
+        data = fh.read()
+else:
+    data = sys.stdin.buffer.read()
+sys.stdout.buffer.write(data.upper())
+"""
+
+
+def quote_command(args):
+    """Quote args into a single command string for the current platform."""
+    if os.name == "nt":
+        return subprocess.list2cmdline(args)
+    return shlex.join(args)
+
+
+class TestMassEditWithExecutable(unittest.TestCase):
+    """Test the --executable option with an actual file."""
+
+    write_input_file = TestMassEditWithFile.write_input_file
+
+    def setUp(self):
+        """Create an executable that upper cases its input."""
+        self.editor = massedit.MassEdit()
+        self.workspace = Workspace()
+        self.file_name = os.path.join(self.workspace.top_dir, "somefile.txt")
+        # The space checks that the executable command line is not split on it.
+        script_dir = os.path.join(self.workspace.top_dir, "some dir")
+        os.mkdir(script_dir)
+        script = os.path.join(script_dir, "upper.py")
+        with io.open(script, "w", encoding="utf-8") as fh:
+            fh.write(upper_script)
+        self.editor.append_executable(quote_command([sys.executable, script]))
+        self.editor.dry_run = True
+
+    def tearDown(self):
+        """Remove the temporary files."""
+        self.workspace.cleanup()
+
+    def read_output_file(self, encoding="utf-8"):
+        """Read back the output file without newline translation."""
+        with io.open(self.file_name, encoding=encoding, newline="") as fh:
+            return fh.read()
+
+    def test_write_keeps_lines(self):
+        """Executable output is written back line by line."""
+        self.write_input_file("abc\ndef\n")
+        self.editor.dry_run = False
+        self.editor.newline = "\n"
+        self.editor.edit_file(self.file_name)
+        self.assertEqual(self.read_output_file(), "ABC\nDEF\n")
+
+    def test_diff(self):
+        """Executable output is diffed line by line."""
+        self.write_input_file("abc\ndef\n")
+        diffs = self.editor.edit_file(self.file_name)
+        self.assertEqual(
+            diffs[2:], ["@@ -1,2 +1,2 @@\n", "-abc\n", "-def\n", "+ABC\n", "+DEF\n"]
+        )
+
+    def test_missing_end_of_line_is_kept(self):
+        """No end of line is added after the last line of the output."""
+        self.write_input_file("abc\ndef")
+        self.editor.dry_run = False
+        self.editor.newline = "\n"
+        self.editor.edit_file(self.file_name)
+        self.assertEqual(self.read_output_file(), "ABC\nDEF")
+
+    def test_encoding(self):
+        """Executable output is decoded with the encoding of the editor."""
+        self.write_input_file("café\n", encoding="cp1252")
+        self.editor.encoding = "cp1252"
+        self.editor.dry_run = False
+        self.editor.newline = "\n"
+        self.editor.edit_file(self.file_name)
+        self.assertEqual(self.read_output_file(encoding="cp1252"), "CAFé\n")
+
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
+    @mock.patch("sys.stdin", new_callable=io.StringIO)
+    def test_from_stdin(self, stdin_, stdout_):
+        """Input read from stdin is piped to the executable."""
+        stdin_.write("abc\ndef\n")
+        stdin_.seek(0)
+        self.editor.dry_run = False
+        self.editor.edit_file("-")
+        self.assertEqual(stdout_.getvalue(), "ABC\nDEF\n")
+
+
 class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
     """Test recursion when processing files."""
 
@@ -768,9 +861,10 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
             execname = "powershell -NoProfile -c gc -head 1"
         next(massedit.get_paths(["tests.py"]))
         massedit.edit_files(["tests.py"], executables=[execname], output=output)
-        actual = output.getvalue().split("\n")
-        self.assertEqual(actual[3], "-#!/usr/bin/env python")
-        self.assertEqual(actual[-1], "+#!/usr/bin/env python+")
+        actual = output.getvalue().splitlines()
+        # The first line is kept as is, all the others are removed.
+        self.assertEqual(actual[3], " #!/usr/bin/env python")
+        self.assertTrue(all(line.startswith("-") for line in actual[4:]))
 
     def test_write_to_cp437_output(self):
         """Check writing to a cp437 output (e.g. Windows console)."""
