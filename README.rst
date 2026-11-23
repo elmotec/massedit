@@ -207,16 +207,18 @@ Contributing
 
 Python 3.11 or later is required. Use Python 3.15 for development.
 
-To set things up for development, please pip-install massedit as shown below.
-It will install it in editable mode and the develop extra packages, including
-commitizen that is recommended to have commits follow conventional commits
-convention:
+To set things up for development, use the steps below to install massedit in
+editable mode and the development tools, including Commitizen for conventional
+commits, and set up the pre-commit Git hook.
 
-::
+On Linux and macOS, run::
 
-    python -m venv venv
-    . venv/bin/activate
-    python -m pip install -e .[develop,test]
+    make install
+
+On Windows, run these commands in PowerShell::
+
+    uv sync
+    uv run --no-sync pre-commit install
 
 
 License
