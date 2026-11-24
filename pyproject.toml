@@ -39,19 +39,25 @@ content-type = "text/x-rst"
 [project.scripts]
 massedit='massedit:main'
 
-[project.optional-dependencies]
-develop = [
-    "black",
+[dependency-groups]
+dev = [
     "commitizen",
-    "flake8",
+    "coverage",
     "pre-commit",
-    "pylint",
-    "pytest",
+    "ruff",
 ]
+
+[tool.ruff.lint]
+preview = true
+explicit-preview-rules = true
+extend-select = ["RUF105"]
 
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61.2"]
+
+[tool.setuptools]
+py-modules = ["massedit"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -59,6 +65,8 @@ tag_format = "v$version"
 version_scheme = "semver"
 version_provider = "pep621"
 update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true
 major_version_zero = true
 version_files = [
     "pyproject.toml:version",

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 
 """A python bulk editor class to apply the same code to many files."""
 
@@ -24,12 +23,13 @@
 # THE SOFTWARE.
 
 import argparse
+import ast
 import difflib
 import fnmatch
 import io
 import logging
 import os
-import re  # noqa: F401 pylint: disable=W0611
+import re
 import shlex
 import shutil
 import subprocess
@@ -81,6 +81,45 @@ def get_function(fn_name):
     return current
 
 
+function_spec_re = re.compile(r"^[\w.]*:[\w.]+$")
+
+
+def guess_action_type(action):
+    """Guess whether action is an expression, a function or an executable.
+
+    Used when none of --expression, --function or --executable is given.
+    The rules are applied in order:
+
+    1. ``[module]:function`` (e.g. ``fixer:fixit``) is a function.
+    2. A Python expression that uses the ``line`` variable is an expression.
+    3. A command whose first word is found on the PATH is an executable.
+
+    Anything else (e.g. a file name passed by mistake) is left undetermined
+    so that the user gets an error rather than a surprising edit.
+
+    Arguments:
+      action (str): the expression, function or executable to classify.
+
+    Return:
+      "expressions", "functions", "executables" or None if undetermined.
+
+    """
+    if function_spec_re.match(action):
+        return "functions"
+    try:
+        tree = ast.parse(action, mode="eval")
+    except SyntaxError:
+        pass
+    else:
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        if "line" in names:
+            return "expressions"
+    words = action.split()
+    if words and shutil.which(words[0]):
+        return "executables"
+    return None
+
+
 def readlines(input_):
     """Return lines from input."""
     try:
@@ -90,7 +129,7 @@ def readlines(input_):
         raise
 
 
-class MassEdit(object):
+class MassEdit:
     """Mass edit lines of files."""
 
     def __init__(self, **kwds):
@@ -153,7 +192,7 @@ class MassEdit(object):
         if result is None:
             log.error("cannot process line '%s' with %s", line, code)
             raise RuntimeError("failed to process line")
-        elif isinstance(result, list) or isinstance(result, tuple):
+        elif isinstance(result, (list, tuple)):
             line = str(" ".join([str(res_element) for res_element in result]))
         else:
             line = str(result)
@@ -195,11 +234,11 @@ class MassEdit(object):
         """Writes output lines to file."""
         bak_file_name = file_name + ".bak"
         if os.path.exists(bak_file_name):
-            msg = "{} already exists".format(bak_file_name)
+            msg = f"{bak_file_name} already exists"
             raise FileExistsError(msg)
         try:
             os.rename(file_name, bak_file_name)
-            with io.open(
+            with open(
                 file_name, "w", encoding=self.encoding, newline=self.newline
             ) as new:
                 new.writelines(to_lines)
@@ -272,7 +311,7 @@ class MassEdit(object):
         if file_name == "-":
             from_lines = readlines(sys.stdin)
         else:
-            with io.open(file_name, "r", encoding=self.encoding) as from_file:
+            with open(file_name, "r", encoding=self.encoding) as from_file:
                 from_lines = readlines(from_file)
 
         if self._executables:
@@ -300,6 +339,9 @@ class MassEdit(object):
         # expects a string.
         if not isinstance(code, str):
             raise TypeError("string expected")
+        if code in self.code_objs:
+            log.warning("ignoring duplicate expression %s", code)
+            return
         log.debug("compiling code %s...", code)
         try:
             code_obj = compile(code, "<string>", "eval")
@@ -320,10 +362,10 @@ class MassEdit(object):
           function (str or callable): function to call on input.
 
         """
-        if not hasattr(function, "__call__"):
+        if not callable(function):
             function = get_function(function)
-            if not hasattr(function, "__call__"):
-                raise ValueError("function is expected to be callable")
+            if not callable(function):
+                raise TypeError("function is expected to be callable")
         self._functions.append(function)
         log.debug("registered %s", function.__name__)
 
@@ -336,9 +378,7 @@ class MassEdit(object):
         """
         if not isinstance(executable, str):
             raise TypeError(
-                "expected executable name as str, not {}".format(
-                    executable.__class__.__name__
-                )
+                f"expected executable name as str, not {executable.__class__.__name__}"
             )
         self._executables.append(executable)
 
@@ -364,6 +404,42 @@ class MassEdit(object):
             self.append_executable(exc)
 
 
+def read_expressions(file_name):
+    """Read Python expressions from a file, one per line.
+
+    Blank lines and lines starting with # are ignored.
+
+    Arguments:
+      file_name (str): name of the file holding the expressions.
+
+    Return:
+      list of expressions in the order they appear in the file.
+
+    """
+    with open(file_name, "r", encoding="utf-8") as expr_file:
+        lines = [line.strip() for line in expr_file]
+    return [line for line in lines if line and not line.startswith("#")]
+
+
+class ExpressionFileAction(argparse.Action):
+    """Add the expressions read from a file to the --expression list.
+
+    Sharing the destination keeps the expressions in the order they were
+    given on the command line, whether with --expression or from files.
+
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            expressions = read_expressions(values)
+        except (OSError, UnicodeDecodeError) as err:
+            raise argparse.ArgumentError(self, str(err)) from err
+        if not expressions:
+            raise argparse.ArgumentError(self, f"no expression found in {values}")
+        current = getattr(namespace, self.dest) or []
+        setattr(namespace, self.dest, current + expressions)
+
+
 def parse_command_line(argv):
     """Parse command line argument. See -h option.
 
@@ -385,6 +461,14 @@ def parse_command_line(argv):
     # Will change all test*.py in subdirectories of tests.
     {0} -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
 
+    # Several expressions are applied in the order they are given, here
+    # first from the command line, then from a file (one per line).
+    {0} -e "re.sub('failIf', 'assertFalse', line)" --expression-file fixes.txt *.py
+
+    # Without -e, -f or -x, the first argument is guessed to be an
+    # expression, a function or an executable (here an expression).
+    {0} "re.sub('failIf', 'assertFalse', line)" *.py
+
     # Will transform virtual methods (almost) to MOCK_METHOD suitable for gmock (see https://github.com/google/googletest).
     {0} -e "re.sub(r'\s*virtual\s+([\w:<>,\s&*]+)\s+(\w+)(\([^\)]*\))\s*((\w+)*)(=\s*0)?;', 'MOCK_METHOD(\g<1>, \g<2>, \g<3>, (\g<4>, override));', line)" test.cpp
     """
@@ -396,7 +480,7 @@ def parse_command_line(argv):
         formatter_class=formatter_class,
     )
     parser.add_argument(
-        "-V", "--version", action="version", version="%(prog)s {}".format(__version__)
+        "-V", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
         "-w",
@@ -418,18 +502,31 @@ def parse_command_line(argv):
         "-e",
         "--expression",
         dest="expressions",
+        action="extend",
         nargs=1,
         help="Python expressions applied to target files. "
-        "Use the line variable to reference the current line.",
+        "Use the line variable to reference the current line. "
+        "Can be repeated: expressions are applied in order.",
+    )
+    parser.add_argument(
+        "--expression-file",
+        metavar="FILE",
+        dest="expressions",
+        action=ExpressionFileAction,
+        help="file with one Python expression per line, applied like "
+        "--expression. Blank lines and lines starting with # are ignored. "
+        "Can be repeated.",
     )
     parser.add_argument(
         "-f",
         "--function",
         dest="functions",
+        action="extend",
         nargs=1,
         help="Python function to apply to target file. "
         "Takes file content as input and yield lines. "
-        "Specify function as [module]:?<function name>.",
+        "Specify function as [module]:?<function name>. "
+        "Can be repeated: functions are applied in order.",
     )
     parser.add_argument(
         "-x",
@@ -476,9 +573,15 @@ def parse_command_line(argv):
         "patterns",
         metavar="file pattern",
         nargs="*",  # argparse.REMAINDER,
-        help="shell-like file name patterns to process or - to read from stdin.",
+        help="shell-like file name patterns to process or - to read from stdin. "
+        "If none of --expression, --function or --executable is given, the "
+        "first argument is used as one of them, guessing which it is.",
     )
-    arguments = parser.parse_args(argv[1:])
+    # Intermixed so options may follow a guessed expression, e.g. "expr" -w *.py
+    arguments = parser.parse_intermixed_args(argv[1:])
+
+    # Sets log level to WARN going more verbose for each new -V.
+    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
 
     if not (
         arguments.expressions
@@ -486,10 +589,21 @@ def parse_command_line(argv):
         or arguments.generate
         or arguments.executables
     ):
-        parser.error("--expression, --function, --generate or --executable missing")
+        if not arguments.patterns:
+            parser.error("--expression, --function, --generate or --executable missing")
+        action = arguments.patterns.pop(0)
+        action_type = guess_action_type(action)
+        if action_type is None:
+            parser.error(
+                f"cannot tell if {action!r} is an expression, a function or an "
+                "executable: use --expression, --function or "
+                "--executable"
+            )
+        if not arguments.patterns:
+            parser.error("file pattern missing")
+        log.info("using '%s' as %s", action, action_type[:-1])
+        setattr(arguments, action_type, [action])
 
-    # Sets log level to WARN going more verbose for each new -V.
-    log.setLevel(max(3 - arguments.verbose_count, 0) * 10)
     return arguments
 
 
@@ -559,7 +673,6 @@ def generate_fixer_file(output):
     """Generate a template fixer file to be used with --function option."""
     with open(output, "w+") as fh:
         fh.write(fixer_template)
-    return
 
 
 # pylint: disable=too-many-arguments, too-many-locals
@@ -579,8 +692,8 @@ def edit_files(
 
     Arguments:
       patterns: file pattern to identify the files to be processed.
-      expressions: single python expression to be applied line by line.
-      functions: functions to process files contents.
+      expressions: python expressions applied line by line, in order.
+      functions: functions to process files contents, in order.
       executables: os executables to execute on the argument files.
       max_depth: maximum recursion level when looking for file matches.
       start_dirs: workspace(ies) where to start the file search.
