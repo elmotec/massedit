@@ -41,13 +41,9 @@ massedit='massedit:main'
 
 [dependency-groups]
 dev = [
-    "black",
     "commitizen",
     "coverage",
-    "flake8",
     "pre-commit",
-    "pylint",
-    "pytest",
     "ruff",
 ]
 
