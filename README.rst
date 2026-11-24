@@ -52,9 +52,10 @@ expressions).
 
 ::
 
-    usage: massedit.py [-h] [-V] [-w] [-v] [-e EXPRESSIONS] [-f FUNCTIONS]
-                       [-x EXECUTABLES] [-s START_DIRS] [-m MAX_DEPTH] [-o FILE]
-                       [-g FILE] [--encoding ENCODING] [--newline NEWLINE]
+    usage: massedit.py [-h] [-V] [-w] [-v] [-e EXPRESSIONS]
+                       [--expression-file FILE] [-f FUNCTIONS] [-x EXECUTABLES]
+                       [-s START_DIRS] [-m MAX_DEPTH] [-o FILE] [-g FILE]
+                       [--encoding ENCODING] [--newline NEWLINE]
                        [file pattern [file pattern ...]]
 
     Python mass editor
@@ -73,11 +74,17 @@ expressions).
                             times)
       -e EXPRESSIONS, --expression EXPRESSIONS
                             Python expressions applied to target files. Use the
-                            line variable to reference the current line.
+                            line variable to reference the current line. Can be
+                            repeated: expressions are applied in order.
+      --expression-file FILE
+                            file with one Python expression per line, applied like
+                            --expression. Blank lines and lines starting with #
+                            are ignored. Can be repeated.
       -f FUNCTIONS, --function FUNCTIONS
                             Python function to apply to target file. Takes file
                             content as input and yield lines. Specify function as
-                            [module]:?<function name>.
+                            [module]:?<function name>. Can be repeated: functions
+                            are applied in order.
       -x EXECUTABLES, --executable EXECUTABLES
                             Python executable to apply to target file.
       -s START_DIRS, --start START_DIRS
@@ -100,6 +107,10 @@ expressions).
 
     # Will change all test*.py in subdirectories of tests.
     massedit.py -e "re.sub('failIf', 'assertFalse', line)" -s tests test*.py
+
+    # Several expressions are applied in the order they are given, here
+    # first from the command line, then from a file (one per line).
+    massedit.py -e "re.sub('failIf', 'assertFalse', line)" --expression-file fixes.txt *.py
 
     # Without -e, -f or -x, the first argument is guessed to be an
     # expression, a function or an executable (here an expression).
@@ -171,8 +182,6 @@ Plans
 -----
 
 - Add support for 3rd party tool (e.g. `autopep8`_) to process the files.
-- Add support for a file of expressions as an argument to allow multiple
-  modification at once.
 - Find a satisfactory way (ie. easy to use) to handle multiline regex as the
   current version works on a line by line basis.
 
