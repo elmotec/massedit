@@ -935,15 +935,17 @@ class TestMultipleExpressions(unittest.TestCase):
     def write_file(self, name, content):
         """Write content to a file in the temporary directory."""
         path = os.path.join(self.tmp_dir.name, name)
-        with io.open(path, "w", encoding="utf-8") as fh:
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(content)
         return path
 
     def parse_with_stderr(self, argv):
         """Parse argv expecting an error, return what was printed."""
-        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
-            with self.assertRaises(SystemExit):
-                massedit.parse_command_line(argv)
+        with (
+            mock.patch("sys.stderr", new_callable=io.StringIO) as stderr,
+            self.assertRaises(SystemExit),
+        ):
+            massedit.parse_command_line(argv)
         return stderr.getvalue()
 
     def test_repeated_expressions_are_kept(self):
@@ -1030,7 +1032,7 @@ class TestMultipleExpressions(unittest.TestCase):
             dry_run=False,
             output=output,
         )
-        with io.open(path, encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             self.assertEqual(fh.read(), "baz baz\n")
 
     @mock.patch("massedit.readlines", return_value=["some example text"])

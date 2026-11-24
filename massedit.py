@@ -384,7 +384,7 @@ def read_expressions(file_name):
       list of expressions in the order they appear in the file.
 
     """
-    with io.open(file_name, "r", encoding="utf-8") as expr_file:
+    with open(file_name, "r", encoding="utf-8") as expr_file:
         lines = [line.strip() for line in expr_file]
     return [line for line in lines if line and not line.startswith("#")]
 
@@ -403,9 +403,7 @@ class ExpressionFileAction(argparse.Action):
         except (OSError, UnicodeDecodeError) as err:
             raise argparse.ArgumentError(self, str(err)) from err
         if not expressions:
-            raise argparse.ArgumentError(
-                self, "no expression found in {}".format(values)
-            )
+            raise argparse.ArgumentError(self, f"no expression found in {values}")
         current = getattr(namespace, self.dest) or []
         setattr(namespace, self.dest, current + expressions)
 
