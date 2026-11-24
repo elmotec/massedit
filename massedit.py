@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 
 """A python bulk editor class to apply the same code to many files."""
 
@@ -30,7 +29,7 @@ import fnmatch
 import io
 import logging
 import os
-import re  # noqa: F401 pylint: disable=W0611
+import re
 import shutil
 import subprocess
 import sys
@@ -129,7 +128,7 @@ def readlines(input_):
         raise
 
 
-class MassEdit(object):
+class MassEdit:
     """Mass edit lines of files."""
 
     def __init__(self, **kwds):
@@ -192,7 +191,7 @@ class MassEdit(object):
         if result is None:
             log.error("cannot process line '%s' with %s", line, code)
             raise RuntimeError("failed to process line")
-        elif isinstance(result, list) or isinstance(result, tuple):
+        elif isinstance(result, (list, tuple)):
             line = str(" ".join([str(res_element) for res_element in result]))
         else:
             line = str(result)
@@ -234,11 +233,11 @@ class MassEdit(object):
         """Writes output lines to file."""
         bak_file_name = file_name + ".bak"
         if os.path.exists(bak_file_name):
-            msg = "{} already exists".format(bak_file_name)
+            msg = f"{bak_file_name} already exists"
             raise FileExistsError(msg)
         try:
             os.rename(file_name, bak_file_name)
-            with io.open(
+            with open(
                 file_name, "w", encoding=self.encoding, newline=self.newline
             ) as new:
                 new.writelines(to_lines)
@@ -272,7 +271,7 @@ class MassEdit(object):
         if file_name == "-":
             from_lines = readlines(sys.stdin)
         else:
-            with io.open(file_name, "r", encoding=self.encoding) as from_file:
+            with open(file_name, "r", encoding=self.encoding) as from_file:
                 from_lines = readlines(from_file)
 
         if self._executables:
@@ -287,7 +286,7 @@ class MassEdit(object):
             except Exception as err:
                 log.error("failed to execute %s: %s", " ".join(exec_list), err)
                 raise  # Let the exception be handled at a higher level.
-            to_lines = output.split(str("\n"))
+            to_lines = output.split("\n")
         else:
             to_lines = from_lines
 
@@ -328,10 +327,10 @@ class MassEdit(object):
           function (str or callable): function to call on input.
 
         """
-        if not hasattr(function, "__call__"):
+        if not callable(function):
             function = get_function(function)
-            if not hasattr(function, "__call__"):
-                raise ValueError("function is expected to be callable")
+            if not callable(function):
+                raise TypeError("function is expected to be callable")
         self._functions.append(function)
         log.debug("registered %s", function.__name__)
 
@@ -344,9 +343,7 @@ class MassEdit(object):
         """
         if not isinstance(executable, str):
             raise TypeError(
-                "expected executable name as str, not {}".format(
-                    executable.__class__.__name__
-                )
+                f"expected executable name as str, not {executable.__class__.__name__}"
             )
         self._executables.append(executable)
 
@@ -408,7 +405,7 @@ def parse_command_line(argv):
         formatter_class=formatter_class,
     )
     parser.add_argument(
-        "-V", "--version", action="version", version="%(prog)s {}".format(__version__)
+        "-V", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     parser.add_argument(
         "-w",
@@ -510,9 +507,9 @@ def parse_command_line(argv):
         action_type = guess_action_type(action)
         if action_type is None:
             parser.error(
-                "cannot tell if {!r} is an expression, a function or an "
+                f"cannot tell if {action!r} is an expression, a function or an "
                 "executable: use --expression, --function or "
-                "--executable".format(action)
+                "--executable"
             )
         if not arguments.patterns:
             parser.error("file pattern missing")
@@ -588,7 +585,6 @@ def generate_fixer_file(output):
     """Generate a template fixer file to be used with --function option."""
     with open(output, "w+") as fh:
         fh.write(fixer_template)
-    return
 
 
 # pylint: disable=too-many-arguments, too-many-locals

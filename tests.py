@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 """Test module to test massedit."""
 
@@ -32,16 +31,14 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock  # pylint: disable=import-error, no-name-in-module
 
 import massedit
-
-from unittest import mock  # pylint: disable=import-error, no-name-in-module
 
 builtins = "builtins"
 
 
-zen = str(
-    """The Zen of Python, by Tim Peters
+zen = """The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
 Explicit is better than implicit.
@@ -63,11 +60,10 @@ If the implementation is hard to explain, it's a bad idea.
 If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea -- let's do more of those!
 """
-)
 
 
 class Workspace:
-    """Wraps creation of files/workspace.
+    r"""Wraps creation of files/workspace.
 
     For some reason tempfile.mkdtemp() causes problems with Python 2.7:
       File "C:\\Python27\\lib\\random.py", line 113, in seed
@@ -223,10 +219,9 @@ class TestMassEdit(unittest.TestCase):  # pylint: disable=R0904
 
     def test_syntax_error(self):
         """Check we get a SyntaxError if the code is not valid."""
-        with mock.patch("massedit.log", autospec=True):
-            with self.assertRaises(SyntaxError):
-                self.editor.append_code_expr("invalid expression")
-                self.assertIsNone(self.editor.code_objs)
+        with mock.patch("massedit.log", autospec=True), self.assertRaises(SyntaxError):
+            self.editor.append_code_expr("invalid expression")
+            self.assertIsNone(self.editor.code_objs)
 
     def test_invalid_code_expr2(self):
         """Check we get a SyntaxError if the code is missing an argument."""
@@ -269,7 +264,7 @@ class TestMassEditWithFile(unittest.TestCase):
     def setUp(self):
         self.editor = massedit.MassEdit()
         self.workspace = Workspace()
-        self.file_name = os.path.join(self.workspace.top_dir, str("somefile.txt"))
+        self.file_name = os.path.join(self.workspace.top_dir, "somefile.txt")
 
     def tearDown(self):
         """Remove the temporary file."""
@@ -283,19 +278,18 @@ class TestMassEditWithFile(unittest.TestCase):
         """
         if not encoding:
             encoding = "utf-8"
-        with io.open(self.file_name, "w+", encoding=encoding) as fh:
+        with open(self.file_name, "w+", encoding=encoding) as fh:
             fh.write(text)
 
     def test_non_utf8_with_utf8_setting(self):
         """Check files with non-utf8 characters are skipped with a warning."""
         log_sink = LogInterceptor(massedit.log)
-        content = str("This is ok\nThis \u00f1ot")
+        content = "This is ok\nThis \u00f1ot"
         self.write_input_file(content, encoding="cp1252")
 
         def identity(lines, _):
             """Return the line itself."""
-            for line in lines:
-                yield line
+            yield from lines
 
         self.editor.append_function(identity)
         with self.assertRaises(UnicodeDecodeError):
@@ -306,13 +300,12 @@ class TestMassEditWithFile(unittest.TestCase):
         """Check files with non-utf8 characters are skipped with a warning."""
         encoding = "cp1252"
         self.editor.encoding = encoding
-        content = str("This is ok\nThis \u00f1ot")
+        content = "This is ok\nThis \u00f1ot"
         self.write_input_file(content, encoding=encoding)
 
         def identity(lines, _):
             """Return the line itself."""
-            for line in lines:
-                yield line
+            yield from lines
 
         self.editor.append_function(identity)
         diffs = self.editor.edit_file(self.file_name)
@@ -328,15 +321,14 @@ class TestMassEditWithFile(unittest.TestCase):
 
         def identity(lines, _):
             """Return the line itself."""
-            for line in lines:
-                yield line
+            yield from lines
 
         self.editor.append_function(identity)
         diffs = self.editor.edit_file(self.file_name)
 
         self.assertEqual(diffs, [])
 
-        with io.open(self.file_name) as f:
+        with open(self.file_name) as f:
             f.readline()
             output_newline = f.newlines
 
@@ -401,7 +393,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
                 file_base_name,
             ]
         )
-        with io.open(self.file_name, "r") as new_file:
+        with open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
         original_lines = zen.splitlines(True)
         self.assertEqual(len(new_lines), len(original_lines))
@@ -432,7 +424,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         ]
         processed = massedit.command_line(arguments)
         self.assertEqual(processed, [os.path.abspath(self.file_name)])
-        with io.open(self.file_name, "r") as updated_file:
+        with open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
         original_lines = zen.splitlines(True)
         self.assertEqual(original_lines, new_lines)
@@ -452,7 +444,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
         ]
         processed = massedit.command_line(arguments)
         self.assertEqual(processed, [os.path.abspath(self.file_name)])
-        with io.open(self.file_name, "r") as updated_file:
+        with open(self.file_name, "r") as updated_file:
             new_lines = updated_file.readlines()
         original_lines = zen.splitlines(True)
         self.assertEqual(original_lines, new_lines)
@@ -470,7 +462,7 @@ class TestMassEditWithZenFile(TestMassEditWithFile):  # pylint: disable=R0904
             dry_run=False,
         )
         self.assertEqual(processed, [self.file_name])
-        with io.open(self.file_name, "r") as new_file:
+        with open(self.file_name, "r") as new_file:
             new_lines = new_file.readlines()
         original_lines = zen.splitlines(True)
         self.assertEqual(len(new_lines), len(original_lines))
@@ -529,8 +521,8 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
             file_name = self.workspace.get_file(
                 parent_dir=self.subdirectory, extension=".txt"
             )
-            with io.open(file_name, "w+") as fh:
-                fh.write(str("some text ") + str(ii))
+            with open(file_name, "w+") as fh:
+                fh.write("some text " + str(ii))
             self.file_names.append(file_name)
 
     def tearDown(self):
@@ -538,7 +530,6 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
 
     def test_feature(self):
         """Trivial test to make sure setUp and tearDown work."""
-        pass
 
     def test_process_subdirectory_dry_run(self):
         """Check that ommiting -w option does not change the files."""
@@ -552,7 +543,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(sorted(processed_files), sorted(self.file_names))
         index = {}
         for ii, file_name in enumerate(self.file_names):
-            with io.open(file_name) as fh:
+            with open(file_name) as fh:
                 new_lines = fh.readlines()
             self.assertEqual(new_lines, ["some text " + str(ii)])
             index[file_name] = ii
@@ -583,7 +574,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(processed_files, self.file_names[1:2])
         index = {}
         for ii, file_name in enumerate(self.file_names):
-            with io.open(file_name) as fh:
+            with open(file_name) as fh:
                 new_lines = fh.readlines()
             self.assertEqual(new_lines, ["some text " + str(ii)])
             index[file_name] = ii
@@ -616,7 +607,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         processed_files = massedit.command_line(arguments)
         self.assertEqual(sorted(processed_files), sorted(self.file_names))
         for ii, file_name in enumerate(self.file_names):
-            with io.open(file_name) as fh:
+            with open(file_name) as fh:
                 new_lines = fh.readlines()
             self.assertEqual(new_lines, ["some blah blah " + str(ii)])
 
@@ -636,7 +627,7 @@ class TestMassEditWalk(unittest.TestCase):  # pylint: disable=R0904
         processed_files = massedit.command_line(arguments)
         self.assertEqual(processed_files, [])
         for ii, file_name in enumerate(self.file_names):
-            with io.open(file_name) as fh:
+            with open(file_name) as fh:
                 new_lines = fh.readlines()
             self.assertEqual(new_lines, ["some text " + str(ii)])
 
@@ -658,7 +649,7 @@ class TestIsList(unittest.TestCase):
 
     def test_unicode_string_not_ok(self):
         """String should not be confused with lists"""
-        self.assertFalse(massedit.is_list(str("test")))
+        self.assertFalse(massedit.is_list("test"))
 
 
 class TestGuessActionType(unittest.TestCase):
@@ -779,24 +770,30 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
     def test_parse_guess_fails(self):
         """Error when the first argument cannot be classified."""
         argv = ["massedit.py", "not-a-command-or-expression(", "tests.py"]
-        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
-            with self.assertRaises(SystemExit):
-                massedit.parse_command_line(argv)
+        with (
+            mock.patch("sys.stderr", new_callable=io.StringIO) as stderr,
+            self.assertRaises(SystemExit),
+        ):
+            massedit.parse_command_line(argv)
         self.assertIn("cannot tell if", stderr.getvalue())
 
     def test_parse_guess_without_pattern(self):
         """Error when the guessed action is not followed by a file pattern."""
         argv = ["massedit.py", "line.upper()"]
-        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
-            with self.assertRaises(SystemExit):
-                massedit.parse_command_line(argv)
+        with (
+            mock.patch("sys.stderr", new_callable=io.StringIO) as stderr,
+            self.assertRaises(SystemExit),
+        ):
+            massedit.parse_command_line(argv)
         self.assertIn("file pattern missing", stderr.getvalue())
 
     def test_parse_nothing(self):
         """Error when there is neither an option nor an argument."""
-        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
-            with self.assertRaises(SystemExit):
-                massedit.parse_command_line(["massedit.py"])
+        with (
+            mock.patch("sys.stderr", new_callable=io.StringIO) as stderr,
+            self.assertRaises(SystemExit),
+        ):
+            massedit.parse_command_line(["massedit.py"])
         self.assertIn("missing", stderr.getvalue())
 
     @mock.patch("massedit.readlines", return_value=["some example text"])
@@ -818,8 +815,7 @@ class TestCommandLine(unittest.TestCase):  # pylint: disable=R0904
         def add_header(data, _):
             """Add header on top of the file."""
             yield "header on top\n"
-            for line in data:
-                yield line
+            yield from data
 
         output = io.StringIO()
         massedit.edit_files(["tests.py"], [], [add_header], output=output)
