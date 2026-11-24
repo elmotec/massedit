@@ -30,6 +30,7 @@ import io
 import logging
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -261,6 +262,45 @@ class MassEdit:
         except OSError as err:
             log.warning("failed to remove backup %s: %s", bak_file_name, err)
 
+    def execute(self, executable, file_name, from_lines):
+        """Run executable on file_name and return its output as lines.
+
+        The file name is appended to the executable command line. When the
+        input is read from stdin (file_name is "-"), from_lines are piped to
+        the executable instead.
+
+        Arguments:
+          executable (str): command line of the executable to run.
+          file_name (str): name of the file to process or "-" for stdin.
+          from_lines (list of str): content of the file.
+
+        Return:
+          list of str: output lines with their end of line, like readlines().
+
+        """
+        input_ = None
+        if file_name == "-":
+            input_ = "".join(from_lines)
+        if os.name == "nt":
+            # Windows parses the command line itself, quotes included.
+            command = executable
+            if input_ is None:
+                command += " " + subprocess.list2cmdline([file_name])
+        else:
+            command = shlex.split(executable)
+            if input_ is None:
+                command.append(file_name)
+        try:
+            log.info("running %s...", command)
+            output = subprocess.check_output(
+                command, input=input_, text=True, encoding=self.encoding
+            )
+        except Exception as err:
+            log.error("failed to execute %s: %s", command, err)
+            raise  # Let the exception be handled at a higher level.
+        # Unlike str.splitlines(), only splits on new lines like readlines().
+        return io.StringIO(output).readlines()
+
     def edit_file(self, file_name):
         """Edit file in place, returns a list of modifications (unified diff).
 
@@ -278,15 +318,7 @@ class MassEdit:
             nb_execs = len(self._executables)
             if nb_execs > 1:
                 log.warning("found %d executables. Will use first one", nb_execs)
-            exec_list = self._executables[0].split()
-            exec_list.append(file_name)
-            try:
-                log.info("running %s...", " ".join(exec_list))
-                output = subprocess.check_output(exec_list, universal_newlines=True)
-            except Exception as err:
-                log.error("failed to execute %s: %s", " ".join(exec_list), err)
-                raise  # Let the exception be handled at a higher level.
-            to_lines = output.split("\n")
+            to_lines = self.execute(self._executables[0], file_name, from_lines)
         else:
             to_lines = from_lines
 
