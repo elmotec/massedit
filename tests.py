@@ -545,7 +545,7 @@ class TestMassEditWithExecutable(unittest.TestCase):
         script_dir = os.path.join(self.workspace.top_dir, "some dir")
         os.mkdir(script_dir)
         script = os.path.join(script_dir, "upper.py")
-        with io.open(script, "w", encoding="utf-8") as fh:
+        with open(script, "w", encoding="utf-8") as fh:
             fh.write(upper_script)
         self.editor.append_executable(quote_command([sys.executable, script]))
         self.editor.dry_run = True
@@ -556,7 +556,7 @@ class TestMassEditWithExecutable(unittest.TestCase):
 
     def read_output_file(self, encoding="utf-8"):
         """Read back the output file without newline translation."""
-        with io.open(self.file_name, encoding=encoding, newline="") as fh:
+        with open(self.file_name, encoding=encoding, newline="") as fh:
             return fh.read()
 
     def test_write_keeps_lines(self):
